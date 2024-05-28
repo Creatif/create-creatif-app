@@ -29,5 +29,28 @@
  * Required prompts:
  * - app directory (default is current)
  * - project name
- * - package.json data
  */
+
+import shell from 'shelljs';
+import {tryWriteBackendZip} from "./http.js";
+import {errorWrap, onError, unzipBackend} from "./util.js";
+
+/** @type {import('./types/index.js').create} */
+export async function create(options) {
+    const currentDirectory = errorWrap(() => shell.pwd(), null,'Failed trying to get current directory with pwd');
+    let workingDirectory = currentDirectory;
+
+    if (options.appDirectory) {
+        workingDirectory = `${currentDirectory}/${options.appDirectory}`;
+        errorWrap(() => shell.mkdir(workingDirectory), null,'Failed creating app directory');
+    }
+
+    const onErrorCallback = () => onError(workingDirectory);
+
+    errorWrap(() => shell.cd(workingDirectory), onErrorCallback, 'Failed trying to cd into directory');
+    errorWrap(() => shell.mkdir('backend'), onErrorCallback, 'Failed trying to create backend directory');
+
+    await tryWriteBackendZip(onErrorCallback);
+    await unzipBackend(`${workingDirectory}/backend/backend.zip`, onErrorCallback);
+    errorWrap(() => shell.rm(`${workingDirectory}/backend/backend.zip`), null, 'Failed to remove backend zip. This is a recoverable error. Please, remove it later manually.');
+}

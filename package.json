@@ -4,6 +4,7 @@
   "description": "CLI to create Creatif CMS app",
   "main": "index.js",
   "bin": "bin.js",
+  "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -12,7 +13,7 @@
     "url": "git+ssh://git@github.com/Creatif/create-creatif-app.git"
   },
   "author": "Mario Skrlec",
-  "license": "ISC",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/Creatif/create-creatif-app/issues"
   },
@@ -21,6 +22,14 @@
     "@clack/prompts": "0.7.0",
     "@npmcli/package-json": "5.1.0",
     "kleur": "4.1.5",
-    "shelljs": "^0.8.5"
+    "node-stream-zip": "^1.15.0",
+    "shelljs": "0.8.5",
+    "unzipper": "^0.11.6"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.12",
+    "@types/shelljs": "^0.8.15",
+    "@types/unzipper": "^0.10.9",
+    "typescript": "5.4.5"
   }
 }

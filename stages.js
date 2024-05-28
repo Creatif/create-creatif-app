@@ -4,6 +4,7 @@ import kleur from "kleur";
 import fs from "fs";
 import {errorWrap} from "./util.js";
 import shell from "shelljs";
+import { readdirSync } from 'fs';
 
 /**
  * @param {string} path
@@ -24,7 +25,7 @@ export async function tryUnzipBackend(path, onError) {
         onError();
     }
 
-    s.stop();
+    s.stop('Backend files extracted');
 }
 
 /**
@@ -65,7 +66,7 @@ export async function tryWriteBackendZip(onError) {
         onError();
     }
 
-    s.stop();
+    s.stop('Backend repository downloaded');
 }
 
 /**
@@ -74,5 +75,29 @@ export async function tryWriteBackendZip(onError) {
  * @returns {Promise<void>}
  */
 export async function tryMoveExtractedFiles(workingDirectory, onError) {
-    errorWrap(() => shell.rm(`${workingDirectory}/backend/backend.zip`), null, 'Failed to remove backend zip. This is a recoverable error. Please, remove it later manually.');
+    errorWrap(
+        () => shell.rm(`${workingDirectory}/backend/backend.zip`),
+        null,
+        'Failed to remove backend zip. This is a recoverable error. Please, remove it later manually.'
+    );
+
+    const getDirectories = /** @param {string} source */ source =>
+        readdirSync(source, { withFileTypes: true })
+            .filter(dirent => dirent.isDirectory())
+            .map(dirent => dirent.name);
+
+    const directories = getDirectories(`${workingDirectory}/backend`);
+    const extractedDirectory = directories[0];
+
+    errorWrap(
+        () => shell.mv(`${workingDirectory}/backend/${extractedDirectory}/*`, `${workingDirectory}/backend`),
+        onError,
+        'Failed moving backend project directories'
+    )
+
+    errorWrap(
+        () => shell.rm('-rf', `${workingDirectory}/backend/${extractedDirectory}`),
+        null,
+        'Failed to remove backend unzipped directory. This is a recoverable error. Please, remove it later manually.'
+    );
 }

@@ -29,25 +29,3 @@ export function errorWrap(fn, onError, msg) {
 
     return blueprint.stdout
 }
-
-/**
- * @param {string} path
- * @param {() => void} onError
- * @returns {Promise<void>}
- */
-export async function unzipBackend(path, onError) {
-    const s = promptSpinner();
-    s.start('Extracting backend files...');
-
-    const zip = new StreamZip.async({ file: path });
-
-    try {
-        const count = await zip.extract(null, 'backend');
-        await zip.close();
-    } catch (e) {
-        s.stop();
-        onError();
-    }
-
-    s.stop();
-}

@@ -32,8 +32,8 @@
  */
 
 import shell from 'shelljs';
-import {tryWriteBackendZip} from "./http.js";
-import {errorWrap, onError, unzipBackend} from "./util.js";
+import {errorWrap, onError} from "./util.js";
+import {tryMoveExtractedFiles, tryUnzipBackend, tryWriteBackendZip} from "./stages.js";
 
 /** @type {import('./types/index.js').create} */
 export async function create(options) {
@@ -50,7 +50,16 @@ export async function create(options) {
     errorWrap(() => shell.cd(workingDirectory), onErrorCallback, 'Failed trying to cd into directory');
     errorWrap(() => shell.mkdir('backend'), onErrorCallback, 'Failed trying to create backend directory');
 
-    await tryWriteBackendZip(onErrorCallback);
-    await unzipBackend(`${workingDirectory}/backend/backend.zip`, onErrorCallback);
-    errorWrap(() => shell.rm(`${workingDirectory}/backend/backend.zip`), null, 'Failed to remove backend zip. This is a recoverable error. Please, remove it later manually.');
+    await runStages(workingDirectory, onErrorCallback);
+}
+
+/**
+ * @param {string} workingDirectory
+ * @param {() => void} onError
+ * @returns {Promise<void>}
+ */
+async function runStages(workingDirectory, onError) {
+    await tryWriteBackendZip(onError);
+    await tryUnzipBackend(`${workingDirectory}/backend/backend.zip`, onError);
+    await tryMoveExtractedFiles(workingDirectory, onError);
 }

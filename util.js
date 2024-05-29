@@ -1,8 +1,8 @@
-import kleur from "kleur";
-import shell from "shelljs";
+import kleur from 'kleur';
+import shell from 'shelljs';
 import fs from 'fs';
-import StreamZip from 'node-stream-zip'
-import { spinner as promptSpinner } from '@clack/prompts';
+import bcrypt from 'bcrypt';
+import crypto from 'crypto';
 
 /**
  * @param {string} workingDirectory
@@ -10,6 +10,22 @@ import { spinner as promptSpinner } from '@clack/prompts';
 export function onError(workingDirectory) {
     shell.rm('-rf', workingDirectory);
     shell.exit(1);
+}
+
+/**
+ * @param {string} file
+ * @param {string} content
+ * @param {() => void} onError
+ * */
+export function writeFileOrError(file, content, onError) {
+    try {
+        fs.writeFileSync(file, content);
+    } catch (e) {
+        if (e instanceof Error) {
+            console.log(kleur.red(`Cannot write .env file: ${e.message}`));
+            onError();
+        }
+    }
 }
 
 /**
@@ -27,5 +43,17 @@ export function errorWrap(fn, onError, msg) {
         }
     }
 
-    return blueprint.stdout
+    return blueprint.stdout;
+}
+
+export async function generatePassword(
+    length = 20,
+    characters = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz~!@-#$',
+) {
+    const rnd = Array.from(crypto.getRandomValues(new Uint32Array(length)))
+        .map((x) => characters[x % characters.length])
+        .join('');
+
+    const salt = await bcrypt.genSalt(10);
+    return await bcrypt.hash(rnd, salt);
 }

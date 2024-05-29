@@ -1,0 +1,16 @@
+{
+    "tabWidth": 4,
+    "singleQuote": true,
+    "trailingComma": "all",
+    "printWidth": 120,
+    "endOfLine": "auto",
+    "bracketSameLine": true,
+    "overrides": [
+        {
+            "files": ["*.js", "*.tsx", "*.ts"],
+            "options": {
+                "tabWidth": 4
+            }
+        }
+    ]
+}

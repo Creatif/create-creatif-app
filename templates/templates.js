@@ -20,9 +20,9 @@ services:
   api:
     container_name: "api"
     build:
-      context: .
-      dockerfile: ./Dockerfile
-    env_file: ./.env
+      context: ./backend
+      dockerfile: Dockerfile
+    env_file: ./backend/.env
     restart: no
     extra_hosts:
       - "host.docker.internal:host-gateway"

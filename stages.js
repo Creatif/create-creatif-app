@@ -5,7 +5,7 @@ import fs from 'fs';
 import { errorWrap, generatePassword, writeFileOrError } from './util.js';
 import shell from 'shelljs';
 import { readdirSync } from 'fs';
-import { backendEnv } from './templates/templates.js';
+import { backendEnv, dockerCompose } from './templates/templates.js';
 
 /**
  * @param {string} path
@@ -132,7 +132,13 @@ export async function tryMoveExtractedFiles(workingDirectory, onError) {
     try {
         env = env.replace('{db_password}', await generatePassword());
     } catch (e) {
-        console.log(kleur.red(`Unable to generate strong password: ${e.message}`));
+        if (e instanceof Error) {
+            console.log(kleur.red(`Unable to generate strong password: ${e.message}`));
+            onError();
+            return;
+        }
+
+        console.log(kleur.red(`Something wrong happened. Please, try again.`));
         onError();
     }
 
@@ -145,5 +151,15 @@ export async function tryMoveExtractedFiles(workingDirectory, onError) {
  * @returns {Promise<void>}
  */
 export async function tryPrepareProject(workingDirectory, onError) {
+    const s = promptSpinner();
+    s.start('Preparing project...');
     errorWrap(() => shell.cd(`${workingDirectory}`), null, 'Failed to prepare project');
+    let replacedDockerCompose = dockerCompose.replace('{assets_directory}', '/app/assets');
+    replacedDockerCompose = replacedDockerCompose.replace('{log_directory}', '/app/var/log');
+    replacedDockerCompose = replacedDockerCompose.replace('{database_password}', 'somepassword');
+    replacedDockerCompose = replacedDockerCompose.replace('{database_user}', 'api');
+
+    writeFileOrError(`${workingDirectory}/docker-compose.yml`, replacedDockerCompose, onError);
+
+    s.stop('Project prepared');
 }

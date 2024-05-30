@@ -24,7 +24,11 @@ export function writeFileOrError(file, content, onError) {
         if (e instanceof Error) {
             console.log(kleur.red(`Cannot write .env file: ${e.message}`));
             onError();
+            return;
         }
+
+        console.log(kleur.red(`Something wrong happened. Please, try again.`));
+        onError();
     }
 }
 

@@ -32,17 +32,17 @@
  */
 
 import shell from 'shelljs';
-import {errorWrap, onError} from "./util.js";
-import {tryMoveExtractedFiles, tryUnzipBackend, tryWriteBackendZip} from "./stages.js";
+import { errorWrap, onError } from './util.js';
+import { tryMoveExtractedFiles, tryPrepareProject, tryUnzipBackend, tryWriteBackendZip } from './stages.js';
 
 /** @type {import('./types/index.js').create} */
 export async function create(options) {
-    const currentDirectory = errorWrap(() => shell.pwd(), null,'Failed trying to get current directory with pwd');
+    const currentDirectory = errorWrap(() => shell.pwd(), null, 'Failed trying to get current directory with pwd');
     let workingDirectory = currentDirectory;
 
     if (options.appDirectory) {
         workingDirectory = `${currentDirectory}/${options.appDirectory}`;
-        errorWrap(() => shell.mkdir(workingDirectory), null,'Failed creating app directory');
+        errorWrap(() => shell.mkdir(workingDirectory), null, 'Failed creating app directory');
     }
 
     const onErrorCallback = () => onError(workingDirectory);
@@ -62,4 +62,5 @@ async function runStages(workingDirectory, onError) {
     await tryWriteBackendZip(onError);
     await tryUnzipBackend(`${workingDirectory}/backend/backend.zip`, onError);
     await tryMoveExtractedFiles(workingDirectory, onError);
+    await tryPrepareProject(workingDirectory, onError);
 }

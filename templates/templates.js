@@ -48,13 +48,46 @@ volumes:
 `;
 
 export const frontendGitignore = `
-.git
-.svn
-.hg
+.idea
+.vscode
 node_modules
-.next
-yarn.lock
-public
+
+.env*
+.env
+# dependencies
+/node_modules
+/.pnp
+.pnp.js
+.idea
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# local env files
+.env*.local
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
 `;
 
 export const backendGitignore = `
@@ -159,3 +192,106 @@ tsconfig.json
 jest.config.js
 tests
 `;
+
+export const runSh = `
+#!/bin/sh
+
+cd backend && docker compose up
+npm run dev
+`;
+
+export const packageJson = `
+{
+  "name": "{project_name}",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "start": "chmod +x run.sh && ./run.sh"
+    "dev": "vite --mode development",
+  },
+  "devDependencies": {
+        "@babel/preset-env": "^7.22.7",
+        "@babel/preset-react": "^7.22.5",
+        "@babel/preset-typescript": "^7.22.5",
+        "@rollup/plugin-commonjs": "^25.0.7",
+        "@types/node": "^20.5.7",
+        "@types/react": "^18.2.14",
+        "@types/react-dom": "^18.2.6",
+        "@typescript-eslint/eslint-plugin": "^6.0.0",
+        "@typescript-eslint/parser": "^6.0.0",
+        "@vitejs/plugin-react": "^4.2.1",
+        "eslint": "^8.44.0",
+        "eslint-config-prettier": "^8.8.0",
+        "eslint-plugin-import": "^2.27.5",
+        "eslint-plugin-react": "^7.32.2",
+        "postcss": "^8.4.31",
+        "postcss-preset-mantine": "^1.11.0",
+        "postcss-simple-vars": "^7.0.1",
+        "prettier": "^3.0.0",
+        "rollup": "^4.10.0",
+        "rollup-plugin-cleanup": "^3.2.1",
+        "rollup-plugin-typescript2": "^0.36.0",
+        "ts-node": "^10.9.1",
+        "typescript": "^5.1.6",
+        "vite": "^5.1.1",
+        "vite-plugin-dts": "^3.6.4",
+        "vite-plugin-lib-inject-css": "^2.1.1"
+    },
+    "dependencies": {
+        "react": "^18.2.0",
+        "react-dom": "^18.2.0"
+    }
+}
+`
+
+export const viteConfig = `
+import path, { resolve, join } from 'path';
+import { fileURLToPath } from 'url';
+import react from '@vitejs/plugin-react';
+import { defineConfig } from 'vite';
+import dts from 'vite-plugin-dts';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+import { libInjectCss } from 'vite-plugin-lib-inject-css'
+
+// https://vitejs.dev/config/
+export default defineConfig({
+    plugins: [
+        react(),
+        libInjectCss(),
+        dts({
+            insertTypesEntry: true,
+        }),
+    ],
+    resolve: {
+        alias: {
+            '@app': join(__dirname, 'src/app'),
+            '@lib': join(__dirname, 'src/lib'),
+            '@root': join(__dirname, 'src'),
+        },
+    },
+    build: {
+        outDir: 'build',
+        copyPublicDir: false,
+        lib: {
+            entry: resolve(__dirname, 'src/index.tsx'),
+            fileName: 'index',
+            formats: ['es']
+        },
+        rollupOptions: {
+            // make sure to externalize deps that shouldn't be bundled
+            // into your library
+            external: ['react', 'react-dom'],
+            output: {
+                // Provide global variables to use in the UMD build
+                // for externalized deps
+                globals: {
+                    react: 'React',
+                    'react-dom': 'ReactDOM',
+                },
+            },
+        },
+    },
+});
+`

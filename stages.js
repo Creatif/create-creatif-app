@@ -5,7 +5,15 @@ import fs from 'fs';
 import { errorWrap, generatePassword, writeFileOrError } from './util.js';
 import shell from 'shelljs';
 import { readdirSync } from 'fs';
-import { backendEnv, dockerCompose } from './templates/templates.js';
+import {
+    backendEnv,
+    dockerCompose,
+    eslint,
+    eslintIgnore, frontendGitignore, packageJson,
+    prettier,
+    prettierIgnore,
+    runSh, viteConfig
+} from './templates/templates.js';
 
 /**
  * @param {string} path
@@ -19,7 +27,7 @@ export async function tryUnzipBackend(path, onError) {
     const zip = new StreamZip.async({ file: path });
 
     try {
-        const count = await zip.extract(null, 'backend');
+        await zip.extract(null, 'backend');
         await zip.close();
     } catch (e) {
         s.stop();
@@ -117,12 +125,6 @@ export async function tryMoveExtractedFiles(workingDirectory, onError) {
     );
 
     errorWrap(
-        () => shell.rm(`${workingDirectory}/backend/docker-compose.yml`),
-        null,
-        'Failed to remove fully prepare backend directory. This is a recoverable error. Please, remove it later manually.',
-    );
-
-    errorWrap(
         () => shell.rm('-rf', `${workingDirectory}/backend/docker-entrypoint-initdb.d`),
         null,
         'Failed to remove fully prepare backend directory. This is a recoverable error. Please, remove it later manually.',
@@ -153,13 +155,15 @@ export async function tryMoveExtractedFiles(workingDirectory, onError) {
 export async function tryPrepareProject(workingDirectory, onError) {
     const s = promptSpinner();
     s.start('Preparing project...');
-    errorWrap(() => shell.cd(`${workingDirectory}`), null, 'Failed to prepare project');
-    let replacedDockerCompose = dockerCompose.replace('{assets_directory}', '/app/assets');
-    replacedDockerCompose = replacedDockerCompose.replace('{log_directory}', '/app/var/log');
-    replacedDockerCompose = replacedDockerCompose.replace('{database_password}', 'somepassword');
-    replacedDockerCompose = replacedDockerCompose.replace('{database_user}', 'api');
 
-    writeFileOrError(`${workingDirectory}/docker-compose.yml`, replacedDockerCompose, onError);
+    writeFileOrError(`${workingDirectory}/run.sh`, runSh, onError);
+    writeFileOrError(`${workingDirectory}/.eslintrc.json`, eslint, onError);
+    writeFileOrError(`${workingDirectory}/.eslintignore`, eslintIgnore, onError);
+    writeFileOrError(`${workingDirectory}/.prettierrc`, prettier, onError);
+    writeFileOrError(`${workingDirectory}/.prettierignore`, prettierIgnore, onError);
+    writeFileOrError(`${workingDirectory}/.gitignore`, frontendGitignore, onError);
+    writeFileOrError(`${workingDirectory}/vite.config.mjs`, viteConfig, onError);
+    writeFileOrError(`${workingDirectory}/package.json`, packageJson.replace('{project_name}', 'some project'), onError);
 
     s.stop('Project prepared');
 }

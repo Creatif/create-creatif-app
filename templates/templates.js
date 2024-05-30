@@ -1,50 +1,82 @@
 export const backendEnv = `
 APP_ENV=local
 
-DATABASE_PASSWORD={db_password}
-DATABASE_USER=api
-DATABASE_HOST=db
-DATABASE_NAME=api
+DATABASE_PASSWORD="{db_password}"
+DATABASE_NAME=app
 DATABASE_PORT=5432
+DATABASE_HOST=db
+DATABASE_USER=app
+
+ASSETS_DIRECTORY=/app/assets
+LOG_DIRECTORY=/app/var/log
 
 SERVER_HOST=localhost
 SERVER_PORT=3002
-
-LOG_DIRECTORY=/app/var/log
-ASSETS_DIRECTORY=/app/assets
 `;
 
-export const dockerCompose = `
-version: "3.9"
+export const frontendEnv = `
+VITE_API_HOST=http://localhost:3002
+`;
+
+export const frontendDockerCompose = `
 services:
-  api:
-    container_name: "api"
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    env_file: ./backend/.env
-    restart: no
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    ports:
-      - 3002:3002
-    volumes:
-      - .:/app
-      - .:/assets:{assets_directory}
-      - .:/var/log:{log_directory}
-    depends_on:
-      - db
-  db:
-    image: "postgres"
-    container_name: "db"
-    ports:
-      - "54333:5432"
-    restart: always
-    environment:
-      POSTGRES_PASSWORD: {database_password}
-      POSTGRES_USER: {database_user}
-volumes:
   app:
+    container_name: "app"
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file: .env
+    restart: no
+    stdin_open: true
+    volumes:
+      - ./src:/app/src
+    ports:
+      - 5173:5173
+    expose:
+      - 5173
+`;
+
+export const frontendDockerIgnore = `
+node_modules
+build
+`;
+
+export const frontendDockerfile = `
+# Fetching the latest node image on alpine linux
+FROM node:alpine AS development
+
+WORKDIR /app
+
+COPY . .
+
+RUN npm install
+
+EXPOSE 5173
+
+# Starting our application
+CMD ["npm","run", "dev"]
+`;
+
+export const indexHtml = `
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <link rel="icon" type="image/svg+xml" href="/src/favicon.svg" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Vite App</title>
+
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap"
+            rel="stylesheet" />
+    </head>
+    <body>
+        <div id="root"></div>
+        <script type="module" src="/src/index.tsx"></script>
+    </body>
+</html>
 `;
 
 export const frontendGitignore = `
@@ -193,21 +225,13 @@ jest.config.js
 tests
 `;
 
-export const runSh = `
-#!/bin/sh
-
-cd backend && docker compose up
-npm run dev
-`;
-
 export const packageJson = `
 {
   "name": "{project_name}",
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "start": "chmod +x run.sh && ./run.sh"
-    "dev": "vite --mode development",
+      "dev": "vite --host 0.0.0.0 --mode development"
   },
   "devDependencies": {
         "@babel/preset-env": "^7.22.7",
@@ -224,6 +248,7 @@ export const packageJson = `
         "eslint-config-prettier": "^8.8.0",
         "eslint-plugin-import": "^2.27.5",
         "eslint-plugin-react": "^7.32.2",
+        "creatif-ui-sdk": "^0.0.1",
         "postcss": "^8.4.31",
         "postcss-preset-mantine": "^1.11.0",
         "postcss-simple-vars": "^7.0.1",
@@ -242,7 +267,7 @@ export const packageJson = `
         "react-dom": "^18.2.0"
     }
 }
-`
+`;
 
 export const viteConfig = `
 import path, { resolve, join } from 'path';
@@ -266,8 +291,6 @@ export default defineConfig({
     ],
     resolve: {
         alias: {
-            '@app': join(__dirname, 'src/app'),
-            '@lib': join(__dirname, 'src/lib'),
             '@root': join(__dirname, 'src'),
         },
     },
@@ -295,3 +318,29 @@ export default defineConfig({
     },
 });
 `
+
+export const indexTsx = `
+import App from './App';
+import { createRoot } from 'react-dom/client';
+
+const rootElement = document.getElementById('root');
+if (rootElement) {
+    const root = createRoot(rootElement);
+    root.render(<App />);
+}
+`;
+
+export const creatifProvider = `
+import { CreatifProvider } from 'creatif-ui-sdk';
+
+export default function App() {
+    return (
+        <CreatifProvider
+            app={{
+                projectName: '{project_name}',
+                items: []
+            }}
+        />
+    );
+}
+`;

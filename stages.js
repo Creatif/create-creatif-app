@@ -7,12 +7,17 @@ import shell from 'shelljs';
 import { readdirSync } from 'fs';
 import {
     backendEnv,
-    dockerCompose,
+    creatifProvider,
     eslint,
-    eslintIgnore, frontendGitignore, packageJson,
+    eslintIgnore,
+    frontendDockerCompose,
+    frontendDockerfile, frontendDockerIgnore, frontendEnv,
+    frontendGitignore,
+    indexHtml, indexTsx,
+    packageJson,
     prettier,
     prettierIgnore,
-    runSh, viteConfig
+    viteConfig
 } from './templates/templates.js';
 
 /**
@@ -149,21 +154,49 @@ export async function tryMoveExtractedFiles(workingDirectory, onError) {
 
 /**
  * @param {string} workingDirectory
+ * @param {string} projectName
  * @param {() => void} onError
  * @returns {Promise<void>}
  */
-export async function tryPrepareProject(workingDirectory, onError) {
+export async function tryPrepareProject(workingDirectory, projectName, onError) {
     const s = promptSpinner();
     s.start('Preparing project...');
 
-    writeFileOrError(`${workingDirectory}/run.sh`, runSh, onError);
     writeFileOrError(`${workingDirectory}/.eslintrc.json`, eslint, onError);
+    writeFileOrError(`${workingDirectory}/.env`, frontendEnv, onError);
     writeFileOrError(`${workingDirectory}/.eslintignore`, eslintIgnore, onError);
     writeFileOrError(`${workingDirectory}/.prettierrc`, prettier, onError);
     writeFileOrError(`${workingDirectory}/.prettierignore`, prettierIgnore, onError);
     writeFileOrError(`${workingDirectory}/.gitignore`, frontendGitignore, onError);
     writeFileOrError(`${workingDirectory}/vite.config.mjs`, viteConfig, onError);
-    writeFileOrError(`${workingDirectory}/package.json`, packageJson.replace('{project_name}', 'some project'), onError);
+    writeFileOrError(`${workingDirectory}/Dockerfile`, frontendDockerfile, onError);
+    writeFileOrError(`${workingDirectory}/docker-compose.yml`, frontendDockerCompose, onError);
+    writeFileOrError(`${workingDirectory}/.dockerignore`, frontendDockerIgnore, onError);
+    writeFileOrError(`${workingDirectory}/.dockerignore`, frontendGitignore, onError);
+    writeFileOrError(`${workingDirectory}/index.html`, indexHtml, onError);
+    writeFileOrError(`${workingDirectory}/package.json`, packageJson.replace('{project_name}', projectName), onError);
+    createRequiredDirectories(workingDirectory, onError);
+    writeFileOrError(`${workingDirectory}/src/index.tsx`, indexTsx, onError);
+    writeFileOrError(`${workingDirectory}/src/App.tsx`, creatifProvider.replace('{project_name}', projectName), onError);
 
     s.stop('Project prepared');
+}
+
+/**
+ * @param {string} workingDirectory
+ * @param {() => void} onError
+ */
+function createRequiredDirectories(workingDirectory, onError) {
+    try {
+        fs.mkdirSync(`${workingDirectory}/src`);
+    } catch (e) {
+        if (e instanceof Error) {
+            console.log(kleur.red(`Cannot create required directories: ${e.message}`));
+            onError();
+            return;
+        }
+
+        console.log(kleur.red(`Something wrong happened. Please, try again.`));
+        onError();
+    }
 }

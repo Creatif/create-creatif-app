@@ -50,17 +50,18 @@ export async function create(options) {
     errorWrap(() => shell.cd(workingDirectory), onErrorCallback, 'Failed trying to cd into directory');
     errorWrap(() => shell.mkdir('backend'), onErrorCallback, 'Failed trying to create backend directory');
 
-    await runStages(workingDirectory, onErrorCallback);
+    await runStages(workingDirectory, options.projectName, onErrorCallback);
 }
 
 /**
  * @param {string} workingDirectory
+ * @param {string} projectName
  * @param {() => void} onError
  * @returns {Promise<void>}
  */
-async function runStages(workingDirectory, onError) {
+async function runStages(workingDirectory, projectName, onError) {
     await tryWriteBackendZip(onError);
     await tryUnzipBackend(`${workingDirectory}/backend/backend.zip`, onError);
     await tryMoveExtractedFiles(workingDirectory, onError);
-    await tryPrepareProject(workingDirectory, onError);
+    await tryPrepareProject(workingDirectory, projectName, onError);
 }

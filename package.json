@@ -1,12 +1,12 @@
 {
   "name": "create-creatif-app",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "CLI to create Creatif CMS app",
   "main": "index.js",
   "bin": "bin.js",
   "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "vite build"
   },
   "repository": {
     "type": "git",

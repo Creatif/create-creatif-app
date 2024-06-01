@@ -1,11 +1,10 @@
 {
   "name": "create-creatif-app",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "CLI to create Creatif CMS app",
   "main": "bin.js",
   "bin": "bin.js",
-  "type": "module",
-  "scripts": {0
+  "scripts": {
     "build": "rollup main.js --file bin.js --format cjs"
   },
   "repository": {

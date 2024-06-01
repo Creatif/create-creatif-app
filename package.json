@@ -2,19 +2,16 @@
   "name": "create-creatif-app",
   "version": "1.0.3",
   "description": "CLI to create Creatif CMS app",
-  "main": "build/index.js",
-  "bin": "build/index.js",
+  "main": "bin.js",
+  "bin": "bin.js",
   "type": "module",
-  "scripts": {
+  "scripts": {0
     "build": "rollup main.js --file bin.js --format cjs"
   },
   "repository": {
     "type": "git",
     "url": "git+ssh://git@github.com/Creatif/create-creatif-app.git"
   },
-  "files": [
-    "build"
-  ],
   "author": "Mario Skrlec",
   "license": "MIT",
   "bugs": {

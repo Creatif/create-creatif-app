@@ -2,6 +2,7 @@
 
 import { intro, outro, group, text } from '@clack/prompts';
 import {create} from "./index.js";
+import kleur from "kleur";
 
 async function run() {
     intro(`Welcome to Creatif CLI project scaffolding`);
@@ -30,9 +31,26 @@ async function run() {
     await create({
         appDirectory: g.appDirectory,
         projectName: g.projectName || g.appDirectory,
-    })
+    });
 
-    outro('You are all set!');
+    const serverHighlight =  kleur.red(`⇨ http server started on [::]:3002`);
+
+    outro(`
+    ${kleur.green(`You are all set!`)}
+    
+    Next steps:
+    1. cd into ${kleur.blue(`${g.appDirectory}`)}
+    2. Run ${kleur.blue(`docker compose up`)}
+    
+    Creatif will be available on ${kleur.green(`http://localhost:5173`)}
+    
+    NOTE: Sometimes, the backend server can take longer to build
+    than the fronted. After you see this message:
+    
+    ${kleur.yellow(`⇨ http server started on [::]:3002`)}
+    
+    the backend server is ready. 
+`);
 }
 
 run();

@@ -67,6 +67,24 @@ async function generatePassword(
     return await bcrypt.hash(rnd, salt);
 }
 
+const frontendEnv = `
+APP_ENV=local
+
+DATABASE_PASSWORD="{db_password}"
+DATABASE_NAME=app
+DATABASE_PORT=5432
+DATABASE_HOST=db
+DATABASE_USER=app
+
+ASSETS_DIRECTORY=/app/assets
+LOG_DIRECTORY=/app/var/log
+
+SERVER_HOST=localhost
+SERVER_PORT=3002
+
+VITE_API_HOST=http://localhost:3002
+`;
+
 const backendEnv = `
 APP_ENV=local
 
@@ -83,14 +101,59 @@ SERVER_HOST=localhost
 SERVER_PORT=3002
 `;
 
-const frontendEnv = `
-VITE_API_HOST=http://localhost:3002
+const backendDockerfile = `
+FROM golang:1.22.3-alpine as golang_build
+
+ENV APP_DIR /app
+WORKDIR /app
+
+RUN apk add build-base
+
+COPY go.mod .
+COPY go.sum .
+
+RUN go install github.com/cosmtrek/air@latest
+
+RUN go mod download
+RUN go mod tidy
+
+COPY . .
+
+EXPOSE 3002
+
+CMD ["air", "-c", "/app/cmd/http/.air.toml"]
 `;
 
 const frontendDockerCompose = `
 services:
-  app:
-    container_name: "app"
+  api:
+    container_name: "api"
+    build:
+      context: backend
+      dockerfile: Dockerfile
+    env_file: .env
+    restart: no
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - 3002:3002
+    volumes:
+      - ./backend:/app
+      - ./backend/assets:\${ASSETS_DIRECTORY}
+      - ./backend/var/log:\${LOG_DIRECTORY}
+    depends_on:
+      - db
+  db:
+    image: "postgres"
+    container_name: "db"
+    ports:
+      - "54333:5432"
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: \${DATABASE_PASSWORD}
+      POSTGRES_USER: \${DATABASE_USER}
+  frontend:
+    container_name: "frontend"
     build:
       context: .
       dockerfile: Dockerfile
@@ -103,6 +166,7 @@ services:
       - 5173:5173
     expose:
       - 5173
+
 `;
 
 const frontendDockerIgnore = `
@@ -111,14 +175,21 @@ build
 `;
 
 const frontendDockerfile = `
-# Fetching the latest node image on alpine linux
+FROM node:alpine AS builder
+
+WORKDIR /app
+
+COPY package*.json ./
+
+RUN npm install
+
+COPY . .
+
 FROM node:alpine AS development
 
 WORKDIR /app
 
-COPY . .
-
-RUN npm install
+COPY --from=builder /app ./
 
 EXPOSE 5173
 
@@ -501,36 +572,34 @@ async function tryMoveExtractedFiles(workingDirectory, onError) {
     errorWrap(
         () => shell.rm('-rf', `${workingDirectory}/backend/${extractedDirectory}`),
         null,
-        'Failed to remove backend unzipped directory. This is a recoverable error. Please, remove it later manually.',
+        'Failed to backend unzipped directory. This is a recoverable error. Please, remove it later manually.',
     );
 
     errorWrap(
         () => shell.rm('-rf', `${workingDirectory}/backend/pgx_ulid`),
         null,
-        'Failed to remove fully prepare backend directory. This is a recoverable error. Please, remove it later manually.',
+        'Failed to fully prepare backend directory. This is a recoverable error. Please, remove it later manually.',
     );
 
     errorWrap(
         () => shell.rm('-rf', `${workingDirectory}/backend/docker-entrypoint-initdb.d`),
         null,
-        'Failed to remove fully prepare backend directory. This is a recoverable error. Please, remove it later manually.',
+        'Failed to fully prepare backend directory. This is a recoverable error. Please, remove it later manually.',
     );
 
-    let env = backendEnv;
-    try {
-        env = env.replace('{db_password}', await generatePassword());
-    } catch (e) {
-        if (e instanceof Error) {
-            console.log(kleur.red(`Unable to generate strong password: ${e.message}`));
-            onError();
-            return;
-        }
+    errorWrap(
+        () => shell.rm('-rf', `${workingDirectory}/backend/Dockerfile`),
+        null,
+        'Failed to fully prepare backend directory. This is a recoverable error. Please, remove it later manually.',
+    );
 
-        console.log(kleur.red(`Something wrong happened. Please, try again.`));
-        onError();
-    }
+    errorWrap(
+        () => shell.rm('-rf', `${workingDirectory}/backend/docker-compose.yml`),
+        null,
+        'Failed to fully prepare backend directory. This is a recoverable error. Please, remove it later manually.',
+    );
 
-    writeFileOrError(`${workingDirectory}/backend/.env`, env, onError);
+    writeFileOrError(`${workingDirectory}/backend/Dockerfile`, backendDockerfile, onError);
 }
 
 /**
@@ -544,7 +613,6 @@ async function tryPrepareProject(workingDirectory, projectName, onError) {
     s.start('Preparing project...');
 
     writeFileOrError(`${workingDirectory}/.eslintrc.json`, eslint, onError);
-    writeFileOrError(`${workingDirectory}/.env`, frontendEnv, onError);
     writeFileOrError(`${workingDirectory}/.eslintignore`, eslintIgnore, onError);
     writeFileOrError(`${workingDirectory}/.prettierrc`, prettier, onError);
     writeFileOrError(`${workingDirectory}/.prettierignore`, prettierIgnore, onError);
@@ -559,6 +627,23 @@ async function tryPrepareProject(workingDirectory, projectName, onError) {
     createRequiredDirectories(workingDirectory, onError);
     writeFileOrError(`${workingDirectory}/src/index.tsx`, indexTsx, onError);
     writeFileOrError(`${workingDirectory}/src/App.tsx`, creatifProvider.replace('{project_name}', projectName), onError);
+
+    try {
+        const dbPassword = await generatePassword();
+        const env = frontendEnv.replace('{db_password}', dbPassword);
+
+        writeFileOrError(`${workingDirectory}/.env`, env, onError);
+        writeFileOrError(`${workingDirectory}/backend/.env`, backendEnv.replace('{db_password}', dbPassword), onError);
+    } catch (e) {
+        if (e instanceof Error) {
+            console.log(kleur.red(`Unable to generate strong password: ${e.message}`));
+            onError();
+            return;
+        }
+
+        console.log(kleur.red(`Something wrong happened. Please, try again.`));
+        onError();
+    }
 
     s.stop('Project prepared');
 }
@@ -676,7 +761,24 @@ async function run() {
         projectName: g.projectName || g.appDirectory,
     });
 
-    prompts.outro('You are all set!');
+    kleur.red(`⇨ http server started on [::]:3002`);
+
+    prompts.outro(`
+    ${kleur.green(`You are all set!`)}
+    
+    Next steps:
+    1. cd into ${kleur.blue(`${g.appDirectory}`)}
+    2. Run ${kleur.blue(`docker compose up`)}
+    
+    Creatif will be available on ${kleur.green(`http://localhost:5173`)}
+    
+    NOTE: Sometimes, the backend server can take longer to build
+    than the fronted. After you see this message:
+    
+    ${kleur.yellow(`⇨ http server started on [::]:3002`)}
+    
+    the backend server is ready. 
+`);
 }
 
 run();

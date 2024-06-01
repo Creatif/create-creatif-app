@@ -1,3 +1,22 @@
+
+export const frontendEnv = `
+APP_ENV=local
+
+DATABASE_PASSWORD="{db_password}"
+DATABASE_NAME=app
+DATABASE_PORT=5432
+DATABASE_HOST=db
+DATABASE_USER=app
+
+ASSETS_DIRECTORY=/app/assets
+LOG_DIRECTORY=/app/var/log
+
+SERVER_HOST=localhost
+SERVER_PORT=3002
+
+VITE_API_HOST=http://localhost:3002
+`;
+
 export const backendEnv = `
 APP_ENV=local
 
@@ -14,14 +33,59 @@ SERVER_HOST=localhost
 SERVER_PORT=3002
 `;
 
-export const frontendEnv = `
-VITE_API_HOST=http://localhost:3002
-`;
+export const backendDockerfile = `
+FROM golang:1.22.3-alpine as golang_build
+
+ENV APP_DIR /app
+WORKDIR /app
+
+RUN apk add build-base
+
+COPY go.mod .
+COPY go.sum .
+
+RUN go install github.com/cosmtrek/air@latest
+
+RUN go mod download
+RUN go mod tidy
+
+COPY . .
+
+EXPOSE 3002
+
+CMD ["air", "-c", "/app/cmd/http/.air.toml"]
+`
 
 export const frontendDockerCompose = `
 services:
-  app:
-    container_name: "app"
+  api:
+    container_name: "api"
+    build:
+      context: backend
+      dockerfile: Dockerfile
+    env_file: .env
+    restart: no
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    ports:
+      - 3002:3002
+    volumes:
+      - ./backend:/app
+      - ./backend/assets:\${ASSETS_DIRECTORY}
+      - ./backend/var/log:\${LOG_DIRECTORY}
+    depends_on:
+      - db
+  db:
+    image: "postgres"
+    container_name: "db"
+    ports:
+      - "54333:5432"
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: \${DATABASE_PASSWORD}
+      POSTGRES_USER: \${DATABASE_USER}
+  frontend:
+    container_name: "frontend"
     build:
       context: .
       dockerfile: Dockerfile
@@ -34,6 +98,7 @@ services:
       - 5173:5173
     expose:
       - 5173
+
 `;
 
 export const frontendDockerIgnore = `
@@ -42,14 +107,21 @@ build
 `;
 
 export const frontendDockerfile = `
-# Fetching the latest node image on alpine linux
+FROM node:alpine AS builder
+
+WORKDIR /app
+
+COPY package*.json ./
+
+RUN npm install
+
+COPY . .
+
 FROM node:alpine AS development
 
 WORKDIR /app
 
-COPY . .
-
-RUN npm install
+COPY --from=builder /app ./
 
 EXPOSE 5173
 

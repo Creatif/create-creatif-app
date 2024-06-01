@@ -6,7 +6,7 @@ import { errorWrap, generatePassword, writeFileOrError } from './util.js';
 import shell from 'shelljs';
 import { readdirSync } from 'fs';
 import {
-    backendEnv,
+    backendDockerfile, backendEnv,
     creatifProvider,
     eslint,
     eslintIgnore,
@@ -120,36 +120,34 @@ export async function tryMoveExtractedFiles(workingDirectory, onError) {
     errorWrap(
         () => shell.rm('-rf', `${workingDirectory}/backend/${extractedDirectory}`),
         null,
-        'Failed to remove backend unzipped directory. This is a recoverable error. Please, remove it later manually.',
+        'Failed to backend unzipped directory. This is a recoverable error. Please, remove it later manually.',
     );
 
     errorWrap(
         () => shell.rm('-rf', `${workingDirectory}/backend/pgx_ulid`),
         null,
-        'Failed to remove fully prepare backend directory. This is a recoverable error. Please, remove it later manually.',
+        'Failed to fully prepare backend directory. This is a recoverable error. Please, remove it later manually.',
     );
 
     errorWrap(
         () => shell.rm('-rf', `${workingDirectory}/backend/docker-entrypoint-initdb.d`),
         null,
-        'Failed to remove fully prepare backend directory. This is a recoverable error. Please, remove it later manually.',
+        'Failed to fully prepare backend directory. This is a recoverable error. Please, remove it later manually.',
     );
 
-    let env = backendEnv;
-    try {
-        env = env.replace('{db_password}', await generatePassword());
-    } catch (e) {
-        if (e instanceof Error) {
-            console.log(kleur.red(`Unable to generate strong password: ${e.message}`));
-            onError();
-            return;
-        }
+    errorWrap(
+        () => shell.rm('-rf', `${workingDirectory}/backend/Dockerfile`),
+        null,
+        'Failed to fully prepare backend directory. This is a recoverable error. Please, remove it later manually.',
+    );
 
-        console.log(kleur.red(`Something wrong happened. Please, try again.`));
-        onError();
-    }
+    errorWrap(
+        () => shell.rm('-rf', `${workingDirectory}/backend/docker-compose.yml`),
+        null,
+        'Failed to fully prepare backend directory. This is a recoverable error. Please, remove it later manually.',
+    );
 
-    writeFileOrError(`${workingDirectory}/backend/.env`, env, onError);
+    writeFileOrError(`${workingDirectory}/backend/Dockerfile`, backendDockerfile, onError);
 }
 
 /**
@@ -163,7 +161,6 @@ export async function tryPrepareProject(workingDirectory, projectName, onError) 
     s.start('Preparing project...');
 
     writeFileOrError(`${workingDirectory}/.eslintrc.json`, eslint, onError);
-    writeFileOrError(`${workingDirectory}/.env`, frontendEnv, onError);
     writeFileOrError(`${workingDirectory}/.eslintignore`, eslintIgnore, onError);
     writeFileOrError(`${workingDirectory}/.prettierrc`, prettier, onError);
     writeFileOrError(`${workingDirectory}/.prettierignore`, prettierIgnore, onError);
@@ -178,6 +175,23 @@ export async function tryPrepareProject(workingDirectory, projectName, onError) 
     createRequiredDirectories(workingDirectory, onError);
     writeFileOrError(`${workingDirectory}/src/index.tsx`, indexTsx, onError);
     writeFileOrError(`${workingDirectory}/src/App.tsx`, creatifProvider.replace('{project_name}', projectName), onError);
+
+    try {
+        const dbPassword = await generatePassword();
+        const env = frontendEnv.replace('{db_password}', dbPassword);
+
+        writeFileOrError(`${workingDirectory}/.env`, env, onError);
+        writeFileOrError(`${workingDirectory}/backend/.env`, backendEnv.replace('{db_password}', dbPassword), onError);
+    } catch (e) {
+        if (e instanceof Error) {
+            console.log(kleur.red(`Unable to generate strong password: ${e.message}`));
+            onError();
+            return;
+        }
+
+        console.log(kleur.red(`Something wrong happened. Please, try again.`));
+        onError();
+    }
 
     s.stop('Project prepared');
 }

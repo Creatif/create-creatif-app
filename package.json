@@ -1,6 +1,6 @@
 {
   "name": "create-creatif-app",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "CLI to create Creatif CMS app",
   "main": "bin.js",
   "bin": "bin.js",

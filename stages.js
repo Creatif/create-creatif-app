@@ -2,7 +2,7 @@ import { spinner as promptSpinner } from '@clack/prompts';
 import StreamZip from 'node-stream-zip';
 import kleur from 'kleur';
 import fs from 'fs';
-import { errorWrap, generatePassword, writeFileOrError } from './util.js';
+import {errorWrap, generatePassword, writeDirOrError, writeFileOrError} from './util.js';
 import shell from 'shelljs';
 import { readdirSync } from 'fs';
 import {
@@ -11,7 +11,9 @@ import {
     eslint,
     eslintIgnore,
     frontendDockerCompose,
-    frontendDockerfile, frontendDockerIgnore, frontendEnv,
+    frontendDockerfile,
+    frontendDockerIgnore,
+    frontendEnv,
     frontendGitignore,
     indexHtml, indexTsx,
     packageJson,
@@ -19,6 +21,16 @@ import {
     prettierIgnore,
     viteConfig
 } from './templates/templates.js';
+import {css} from "./templates/starterProject/css.js";
+import {
+    accountForm,
+    apartmentForm,
+    houseForm,
+    landForm,
+    propertyForm,
+    studioForm
+} from "./templates/starterProject/forms.js";
+import {starterApp} from "./templates/starterProject/app.js";
 
 /**
  * @param {string} path
@@ -194,6 +206,26 @@ export async function tryPrepareProject(workingDirectory, projectName, onError) 
     }
 
     s.stop('Project prepared');
+}
+
+/**
+ * @param {string} workingDirectory
+ * @param {() => void} onError
+ * @returns {Promise<void>}
+ */
+export async function tryCreateStarterProject(workingDirectory, onError) {
+    writeDirOrError(`${workingDirectory}/src/components`, onError);
+    writeDirOrError(`${workingDirectory}/src/css`, onError);
+
+    writeFileOrError(`${workingDirectory}/src/css/root.module.css`, css, onError);
+    writeFileOrError(`${workingDirectory}/src/components/ApartmentForm.tsx`, apartmentForm, onError);
+    writeFileOrError(`${workingDirectory}/src/components/LandForm.tsx`, landForm, onError);
+    writeFileOrError(`${workingDirectory}/src/components/StudioForm.tsx`, studioForm, onError);
+    writeFileOrError(`${workingDirectory}/src/components/HouseForm.tsx`, houseForm, onError);
+
+    writeFileOrError(`${workingDirectory}/src/AccountForm.tsx`, accountForm, onError);
+    writeFileOrError(`${workingDirectory}/src/PropertyForm.tsx`, propertyForm, onError);
+    writeFileOrError(`${workingDirectory}/src/App.tsx`, starterApp, onError);
 }
 
 /**

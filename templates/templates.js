@@ -320,7 +320,7 @@ export const packageJson = `
         "eslint-config-prettier": "^8.8.0",
         "eslint-plugin-import": "^2.27.5",
         "eslint-plugin-react": "^7.32.2",
-        "creatif-ui-sdk": "^0.0.1",
+        "creatif-ui-sdk": "^0.0.5",
         "postcss": "^8.4.31",
         "postcss-preset-mantine": "^1.11.0",
         "postcss-simple-vars": "^7.0.1",

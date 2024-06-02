@@ -33,7 +33,13 @@
 
 import shell from 'shelljs';
 import { errorWrap, onError } from './util.js';
-import { tryMoveExtractedFiles, tryPrepareProject, tryUnzipBackend, tryWriteBackendZip } from './stages.js';
+import {
+    tryCreateStarterProject,
+    tryMoveExtractedFiles,
+    tryPrepareProject,
+    tryUnzipBackend,
+    tryWriteBackendZip
+} from './stages.js';
 
 /** @type {import('./types/index.js').create} */
 export async function create(options) {
@@ -51,6 +57,10 @@ export async function create(options) {
     errorWrap(() => shell.mkdir('backend'), onErrorCallback, 'Failed trying to create backend directory');
 
     await runStages(workingDirectory, options.projectName, onErrorCallback);
+
+    if (options.hasStarterProject) {
+        await tryCreateStarterProject(workingDirectory, onErrorCallback);
+    }
 }
 
 /**

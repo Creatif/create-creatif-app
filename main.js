@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { intro, outro, group, text } from '@clack/prompts';
+import {intro, outro, group, text, confirm} from '@clack/prompts';
 import {create} from "./index.js";
 import kleur from "kleur";
 
@@ -20,6 +20,9 @@ async function run() {
                     if (value.length < 1 && value.length > 200) return `Project name must have between 1 and 200 characters.`;
                 },
             }),
+            hasStarterProject: () => confirm({
+                message: 'Would you like to setup a starter project? (you can delete it later)',
+            }),
         },
         {
             onCancel: () => {
@@ -31,9 +34,8 @@ async function run() {
     await create({
         appDirectory: g.appDirectory,
         projectName: g.projectName || g.appDirectory,
+        hasStarterProject: g.hasStarterProject,
     });
-
-    const serverHighlight =  kleur.red(`⇨ http server started on [::]:3002`);
 
     outro(`
     ${kleur.green(`You are all set!`)}

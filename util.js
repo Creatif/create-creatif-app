@@ -33,6 +33,26 @@ export function writeFileOrError(file, content, onError) {
 }
 
 /**
+ * @param {string} directory
+ * @param {() => void} onError
+ * */
+export function writeDirOrError(directory, onError) {
+    try {
+        fs.mkdirSync(directory);
+    } catch (e) {
+        if (e instanceof Error) {
+            console.log(kleur.red(`Cannot write .env file: ${e.message}`));
+            onError();
+            return;
+        }
+
+        console.log(kleur.red(`Something wrong happened. Please, try again.`));
+        onError();
+    }
+}
+
+
+/**
  * @param {() => shell.ShellString} fn
  * @param {import('./types/index.js').onErrorCallback} onError
  * @param {string} msg

@@ -1,12 +1,13 @@
 {
   "name": "create-creatif-app",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "CLI to create Creatif CMS app",
   "main": "bin.js",
   "bin": "bin.js",
   "type": "module",
   "scripts": {
-    "build": "rollup main.js --file bin.js --format cjs"
+    "build": "rollup main.js --file bin.js --format cjs",
+    "npm-publish": "npm run build && npm publish"
   },
   "repository": {
     "type": "git",

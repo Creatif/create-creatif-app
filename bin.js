@@ -38,6 +38,26 @@ function writeFileOrError(file, content, onError) {
 }
 
 /**
+ * @param {string} directory
+ * @param {() => void} onError
+ * */
+function writeDirOrError(directory, onError) {
+    try {
+        fs.mkdirSync(directory);
+    } catch (e) {
+        if (e instanceof Error) {
+            console.log(kleur.red(`Cannot write .env file: ${e.message}`));
+            onError();
+            return;
+        }
+
+        console.log(kleur.red(`Something wrong happened. Please, try again.`));
+        onError();
+    }
+}
+
+
+/**
  * @param {() => shell.ShellString} fn
  * @param {import('./types/index.js').onErrorCallback} onError
  * @param {string} msg
@@ -375,7 +395,7 @@ const packageJson = `
         "eslint-config-prettier": "^8.8.0",
         "eslint-plugin-import": "^2.27.5",
         "eslint-plugin-react": "^7.32.2",
-        "creatif-ui-sdk": "^0.0.1",
+        "creatif-ui-sdk": "^0.0.5",
         "postcss": "^8.4.31",
         "postcss-preset-mantine": "^1.11.0",
         "postcss-simple-vars": "^7.0.1",
@@ -470,6 +490,547 @@ export default function App() {
         />
     );
 }
+`;
+
+const css = `
+.fieldGrid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    align-items: center;
+    align-content: center;
+    gap: 1rem;
+
+    margin-top: 1rem;
+}
+
+.houseDetailsHeader {
+    margin: 2rem 0 1rem 0;
+    padding-bottom: 0.5rem;
+    font-size: 1rem;
+
+    font-weight: bold;
+    border-bottom: 1px solid lightgray;
+}
+
+.accountNote {
+    margin-top: 2rem;
+    padding-top: 1rem;
+
+    border-top: 1px solid lightgray;
+}
+
+.submitButton {
+    display: flex;
+    justify-content: flex-end;
+
+    margin-top: 3rem;
+}
+`;
+
+const propertyForm = `
+import { Form, InputText, InputSelectControlled, InputTextarea } from 'creatif-ui-sdk';
+import { HouseForm } from './components/HouseForm';
+import { ApartmentForm } from './components/ApartmentForm';
+import css from './css/root.module.css';
+import { StudioForm } from './components/StudioForm';
+import { LandForm } from './components/LandForm';
+
+export function PropertyForm() {
+    return (
+        <Form<{
+            address: string;
+            city: string;
+            postalCode: string;
+            propertyStatus: 'Rent' | 'Sell' | 'Rent business' | '';
+            propertyType: 'House' | 'Apartment' | 'Studio' | 'Land' | '';
+
+            numOfHouseFloors: number | null;
+            houseSize: number | null;
+            houseLocalPrice: number | null;
+            houseBackYard: boolean;
+            houseNeedsRepair: boolean;
+            houseBackYardSize: number;
+            houseRepairNote: string;
+
+            apartmentFloorNumber: number | null;
+            apartmentSize: number | null;
+            apartmentLocalPrice: number | null;
+            apartmentBalcony: boolean;
+            apartmentBalconySize: number | null;
+
+            studioFloorNumber: number | null;
+            studioSize: number | null;
+
+            landSize: number | null;
+            hasConstructionPermit: number | null;
+        }>
+            bindings={{
+                name: (values) => \`\${values.address}-\${values.city}-\${values.postalCode}\`,
+            }}
+            formProps={{
+                defaultValues: {
+                    address: '',
+                    city: '',
+                    postalCode: '',
+                    propertyStatus: '',
+                    propertyType: '',
+
+                    numOfHouseFloors: null,
+                    houseSize: null,
+                    houseLocalPrice: null,
+                    houseBackYard: false,
+                    houseNeedsRepair: false,
+                    houseBackYardSize: null,
+                    houseRepairNote: '',
+
+                    apartmentFloorNumber: null,
+                    apartmentSize: null,
+                    apartmentLocalPrice: null,
+                    apartmentBalcony: false,
+                    apartmentBalconySize: null,
+
+                    studioFloorNumber: null,
+                    studioSize: null,
+
+                    hasConstructionPermit: null,
+                    landSize: null,
+                },
+            }}
+            inputs={(submitButton, { watch, inputReference }) => {
+                const propertyType = watch('propertyType');
+
+                return (
+                    <>
+                        {inputReference({
+                            structureName: 'Accounts',
+                            name: 'accounts',
+                            structureType: 'map',
+                            label: 'Account',
+                            validation: {
+                                required: 'Selecting an owner is required',
+                            },
+                        })}
+
+                        <div>
+                            <div className={css.fieldGrid}>
+                                <div>
+                                    <InputText
+                                        label="Address"
+                                        name="address"
+                                        options={{
+                                            required: 'Address is required',
+                                        }}
+                                    />
+                                </div>
+
+                                <div>
+                                    <InputText
+                                        label="City"
+                                        name="city"
+                                        options={{
+                                            required: 'City is required',
+                                        }}
+                                    />
+                                </div>
+
+                                <div>
+                                    <InputText
+                                        label="Postal code"
+                                        name="postalCode"
+                                        options={{
+                                            required: 'Postal code is required',
+                                        }}
+                                    />
+                                </div>
+
+                                <div>
+                                    <InputSelectControlled
+                                        data={['Rent', 'Sell', 'Rent business']}
+                                        label="Property status"
+                                        name="propertyStatus"
+                                        validation={{
+                                            required: 'Property status is required',
+                                        }}
+                                    />
+                                </div>
+
+                                <div>
+                                    <InputSelectControlled
+                                        data={['House', 'Apartment', 'Studio', 'Land']}
+                                        label="Property type"
+                                        name="propertyType"
+                                        validation={{
+                                            required: 'Property type is required',
+                                        }}
+                                    />
+                                </div>
+                            </div>
+
+                            {propertyType === 'Apartment' && <ApartmentForm />}
+                            {propertyType === 'House' && <HouseForm />}
+                            {propertyType === 'Studio' && <StudioForm />}
+                            {propertyType === 'Land' && <LandForm />}
+                        </div>
+
+                        <div className={css.accountNote}>
+                            <InputTextarea
+                                label="Account note"
+                                name="finalNote"
+                                description="Describe anything that could not be represented in the fields above"
+                            />
+                        </div>
+
+                        <div className={css.submitButton}>{submitButton}</div>
+                    </>
+                );
+            }}
+        />
+    );
+}
+`;
+
+const apartmentForm = `
+import { InputCheckbox, InputNumberControlled } from 'creatif-ui-sdk';
+import { useCreatifFormContext } from 'creatif-ui-sdk';
+import css from '../css/root.module.css';
+
+export function ApartmentForm() {
+    const { watch } = useCreatifFormContext();
+    const apartmentBalcony = watch('apartmentBalcony');
+
+    return (
+        <div>
+            <h1 className={css.houseDetailsHeader}>APARTMENT DETAILS</h1>
+
+            <div className={css.fieldGrid}>
+                <div>
+                    <InputNumberControlled
+                        name="apartmentFloorNumber"
+                        label="Floor number"
+                        validation={{
+                            required: 'Floor number is required',
+                        }}
+                    />
+                </div>
+
+                <div>
+                    <InputNumberControlled
+                        name="apartmentSize"
+                        label="Size (in meters squared)"
+                        validation={{
+                            required: 'Size is required',
+                        }}
+                    />
+                </div>
+
+                <div>
+                    <InputNumberControlled
+                        name="apartmentLocalPrice"
+                        label="Local price (in meters squared)"
+                        validation={{
+                            required: 'Local price is required',
+                        }}
+                    />
+                </div>
+
+                <div>
+                    <InputCheckbox name="apartmentBalcony" label="Has balcony?" />
+                </div>
+            </div>
+
+            <div className={css.fieldGrid}>
+                {apartmentBalcony && (
+                    <div>
+                        <InputNumberControlled
+                            name="apartmentBalconySize"
+                            label="Balcony size"
+                            validation={{
+                                required: 'Balcony size is required',
+                            }}
+                        />
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+}
+`;
+
+const houseForm = `
+import { InputCheckbox, InputNumberControlled, InputTextarea } from 'creatif-ui-sdk';
+import { useCreatifFormContext } from 'creatif-ui-sdk';
+import css from '../css/root.module.css';
+
+export function HouseForm() {
+    const { watch } = useCreatifFormContext();
+
+    const backYard = watch('houseBackYard');
+    const needsRepair = watch('houseNeedsRepair');
+
+    return (
+        <div>
+            <h1 className={css.houseDetailsHeader}>HOUSE DETAILS</h1>
+
+            <div className={css.fieldGrid}>
+                <div>
+                    <InputNumberControlled
+                        name="numOfHouseFloors"
+                        label="Number of floors"
+                        validation={{
+                            required: 'Number of floors is required',
+                        }}
+                    />
+                </div>
+
+                <div>
+                    <InputNumberControlled
+                        name="houseSize"
+                        label="Size"
+                        description="In meters squared"
+                        validation={{
+                            required: 'Size is required',
+                        }}
+                    />
+                </div>
+
+                <div>
+                    <InputNumberControlled
+                        name="houseLocalPrice"
+                        label="Local price"
+                        description="Per meters squared"
+                        validation={{
+                            required: 'Local price is required',
+                        }}
+                    />
+                </div>
+
+                <div>
+                    <InputCheckbox name="houseBackYard" label="Has back yard?" />
+                </div>
+
+                <div>
+                    <InputCheckbox name="houseNeedsRepair" label="Need repair?" />
+                </div>
+            </div>
+
+            <div className={css.fieldGrid}>
+                {backYard && (
+                    <div>
+                        <InputNumberControlled
+                            name="houseBackYardSize"
+                            label="Back yard size"
+                            description="Size in meters squared"
+                            validation={{
+                                required: 'Back yard size is required',
+                            }}
+                        />
+                    </div>
+                )}
+
+                {needsRepair && (
+                    <div
+                        style={{
+                            gridColumn: 'span 2',
+                        }}>
+                        <InputTextarea
+                            description="The description should be as detailed as possible"
+                            resize="both"
+                            autosize={true}
+                            minRows={2}
+                            maxRows={10}
+                            name="houseRepairNote"
+                            label="Describe the repairs"
+                            options={{
+                                required: 'Note is required',
+                            }}
+                        />
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+}
+`;
+
+const studioForm = `
+import { InputNumberControlled } from 'creatif-ui-sdk';
+import css from '../css/root.module.css';
+
+export function StudioForm() {
+    return (
+        <div>
+            <h1 className={css.houseDetailsHeader}>STUDIO DETAILS</h1>
+
+            <div className={css.fieldGrid}>
+                <div>
+                    <InputNumberControlled
+                        name="studioFloorNumber"
+                        label="Floor number"
+                        validation={{
+                            required: 'Floor number is required',
+                        }}
+                    />
+                </div>
+
+                <div>
+                    <InputNumberControlled
+                        name="studioSize"
+                        label="Size (in meters squared)"
+                        validation={{
+                            required: 'Size is required',
+                        }}
+                    />
+                </div>
+            </div>
+        </div>
+    );
+}
+`;
+
+const landForm = `
+import { InputCheckbox, InputNumberControlled } from 'creatif-ui-sdk';
+import css from '../css/root.module.css';
+
+export function LandForm() {
+    return (
+        <div>
+            <h1 className={css.houseDetailsHeader}>APARTMENT DETAILS</h1>
+
+            <div className={css.fieldGrid}>
+                <div>
+                    <InputNumberControlled
+                        name="landSize"
+                        label="Size (in meters squared)"
+                        validation={{
+                            required: 'Size is required',
+                        }}
+                    />
+                </div>
+
+                <div>
+                    <InputCheckbox name="hasConstructionPermit" label="Has construction Permit?" />
+                </div>
+            </div>
+        </div>
+    );
+}
+`;
+
+const accountForm = `
+import { Form, InputText } from 'creatif-ui-sdk';
+import css from './css/root.module.css';
+export function AccountForm() {
+    return (
+        <Form<{
+            name: string;
+            lastName: string;
+            address: string;
+            city: string;
+            postalCode: string;
+        }>
+            bindings={{
+                name: (values) => \`\${values.name}-\${values.lastName}-\${values.address}\`,
+            }}
+            formProps={{
+                defaultValues: {
+                    name: '',
+                    lastName: '',
+                    address: '',
+                    city: '',
+                    postalCode: '',
+                },
+            }}
+            inputs={(submitButton) => (
+                <>
+                    <div className={css.fieldGrid}>
+                        <div>
+                            <InputText
+                                label="Name"
+                                name="name"
+                                options={{
+                                    required: 'Name is required',
+                                }}
+                            />
+                        </div>
+
+                        <div>
+                            <InputText
+                                label="Last name"
+                                name="lastName"
+                                options={{
+                                    required: 'Last name is required',
+                                }}
+                            />
+                        </div>
+
+                        <div>
+                            <InputText
+                                label="Address"
+                                name="address"
+                                options={{
+                                    required: 'Address is required',
+                                }}
+                            />
+                        </div>
+
+                        <div>
+                            <InputText
+                                label="City"
+                                name="city"
+                                options={{
+                                    required: 'City is required',
+                                }}
+                            />
+                        </div>
+
+                        <div>
+                            <InputText
+                                label="Postal code"
+                                name="postalCode"
+                                options={{
+                                    required: 'City is required',
+                                }}
+                            />
+                        </div>
+                    </div>
+
+                    <div className={css.submitButton}>{submitButton}</div>
+                </>
+            )}
+        />
+    );
+}
+`;
+
+const starterApp = `
+import React from 'react';
+import { CreatifProvider } from 'creatif-ui-sdk';
+import { PropertyForm } from './PropertyForm';
+import { AccountForm } from './AccountForm';
+
+export default function App() {
+    return (
+        <CreatifProvider
+            app={{
+                logo: 'Real Estate Manager',
+                projectName: 'project',
+                items: [
+                    {
+                        structureType: 'map',
+                        structureName: 'Properties',
+                        form: <PropertyForm />,
+                    },
+                    {
+                        structureType: 'map',
+                        structureName: 'Accounts',
+                        form: <AccountForm />,
+                    },
+                ],
+            }}
+        />
+    );
+}
+
 `;
 
 /**
@@ -651,6 +1212,26 @@ async function tryPrepareProject(workingDirectory, projectName, onError) {
 /**
  * @param {string} workingDirectory
  * @param {() => void} onError
+ * @returns {Promise<void>}
+ */
+async function tryCreateStarterProject(workingDirectory, onError) {
+    writeDirOrError(`${workingDirectory}/src/components`, onError);
+    writeDirOrError(`${workingDirectory}/src/css`, onError);
+
+    writeFileOrError(`${workingDirectory}/src/css/root.module.css`, css, onError);
+    writeFileOrError(`${workingDirectory}/src/components/ApartmentForm.tsx`, apartmentForm, onError);
+    writeFileOrError(`${workingDirectory}/src/components/LandForm.tsx`, landForm, onError);
+    writeFileOrError(`${workingDirectory}/src/components/StudioForm.tsx`, studioForm, onError);
+    writeFileOrError(`${workingDirectory}/src/components/HouseForm.tsx`, houseForm, onError);
+
+    writeFileOrError(`${workingDirectory}/src/AccountForm.tsx`, accountForm, onError);
+    writeFileOrError(`${workingDirectory}/src/PropertyForm.tsx`, propertyForm, onError);
+    writeFileOrError(`${workingDirectory}/src/App.tsx`, starterApp, onError);
+}
+
+/**
+ * @param {string} workingDirectory
+ * @param {() => void} onError
  */
 function createRequiredDirectories(workingDirectory, onError) {
     try {
@@ -717,6 +1298,10 @@ async function create(options) {
     errorWrap(() => shell.mkdir('backend'), onErrorCallback, 'Failed trying to create backend directory');
 
     await runStages(workingDirectory, options.projectName, onErrorCallback);
+
+    if (options.hasStarterProject) {
+        await tryCreateStarterProject(workingDirectory, onErrorCallback);
+    }
 }
 
 /**
@@ -748,6 +1333,9 @@ async function run() {
                     if (value.length < 1 && value.length > 200) return `Project name must have between 1 and 200 characters.`;
                 },
             }),
+            hasStarterProject: () => prompts.confirm({
+                message: 'Would you like to setup a starter project? (you can delete it later)',
+            }),
         },
         {
             onCancel: () => {
@@ -759,9 +1347,8 @@ async function run() {
     await create({
         appDirectory: g.appDirectory,
         projectName: g.projectName || g.appDirectory,
+        hasStarterProject: g.hasStarterProject,
     });
-
-    kleur.red(`⇨ http server started on [::]:3002`);
 
     prompts.outro(`
     ${kleur.green(`You are all set!`)}

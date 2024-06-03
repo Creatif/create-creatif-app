@@ -1,4 +1,3 @@
-
 export const frontendEnv = `
 APP_ENV=local
 
@@ -54,7 +53,7 @@ COPY . .
 EXPOSE 3002
 
 CMD ["air", "-c", "/app/cmd/http/.air.toml"]
-`
+`;
 
 export const frontendDockerCompose = `
 services:
@@ -320,7 +319,7 @@ export const packageJson = `
         "eslint-config-prettier": "^8.8.0",
         "eslint-plugin-import": "^2.27.5",
         "eslint-plugin-react": "^7.32.2",
-        "creatif-ui-sdk": "^0.0.5",
+        "creatif-ui-sdk": "^0.0.6",
         "postcss": "^8.4.31",
         "postcss-preset-mantine": "^1.11.0",
         "postcss-simple-vars": "^7.0.1",
@@ -389,7 +388,7 @@ export default defineConfig({
         },
     },
 });
-`
+`;
 
 export const indexTsx = `
 import App from './App';

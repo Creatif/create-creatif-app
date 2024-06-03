@@ -407,7 +407,7 @@ const packageJson = `
         "typescript": "^5.1.6",
         "vite": "^5.1.1",
         "vite-plugin-dts": "^3.6.4",
-        "vite-plugin-lib-inject-css": "^2.1.1"
+        "vite-plugin-css-injected-by-js": "^3.5.1"
     },
     "dependencies": {
         "react": "^18.2.0",
@@ -422,16 +422,16 @@ import { fileURLToPath } from 'url';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 import dts from 'vite-plugin-dts';
+import cssInjectedByJsPlugin from 'vite-plugin-css-injected-by-js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-import { libInjectCss } from 'vite-plugin-lib-inject-css'
 
 // https://vitejs.dev/config/
 export default defineConfig({
     plugins: [
         react(),
-        libInjectCss(),
+        cssInjectedByJsPlugin(),
         dts({
             insertTypesEntry: true,
         }),

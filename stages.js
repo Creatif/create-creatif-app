@@ -2,11 +2,12 @@ import { spinner as promptSpinner } from '@clack/prompts';
 import StreamZip from 'node-stream-zip';
 import kleur from 'kleur';
 import fs from 'fs';
-import {errorWrap, generatePassword, writeDirOrError, writeFileOrError} from './util.js';
+import { errorWrap, generatePassword, writeDirOrError, writeFileOrError } from './util.js';
 import shell from 'shelljs';
 import { readdirSync } from 'fs';
 import {
-    backendDockerfile, backendEnv,
+    backendDockerfile,
+    backendEnv,
     creatifProvider,
     eslint,
     eslintIgnore,
@@ -15,22 +16,24 @@ import {
     frontendDockerIgnore,
     frontendEnv,
     frontendGitignore,
-    indexHtml, indexTsx,
+    indexHtml,
+    indexTsx,
     packageJson,
     prettier,
     prettierIgnore,
-    viteConfig
+    viteConfig,
 } from './templates/templates.js';
-import {css} from "./templates/starterProject/css.js";
+import { css } from './templates/starterProject/css.js';
 import {
     accountForm,
     apartmentForm,
     houseForm,
     landForm,
     propertyForm,
-    studioForm
-} from "./templates/starterProject/forms.js";
-import {starterApp} from "./templates/starterProject/app.js";
+    richTextEditor,
+    studioForm,
+} from './templates/starterProject/forms.js';
+import { starterApp } from './templates/starterProject/app.js';
 
 /**
  * @param {string} path
@@ -186,7 +189,11 @@ export async function tryPrepareProject(workingDirectory, projectName, onError) 
     writeFileOrError(`${workingDirectory}/package.json`, packageJson.replace('{project_name}', projectName), onError);
     createRequiredDirectories(workingDirectory, onError);
     writeFileOrError(`${workingDirectory}/src/index.tsx`, indexTsx, onError);
-    writeFileOrError(`${workingDirectory}/src/App.tsx`, creatifProvider.replace('{project_name}', projectName), onError);
+    writeFileOrError(
+        `${workingDirectory}/src/App.tsx`,
+        creatifProvider.replace('{project_name}', projectName),
+        onError,
+    );
 
     try {
         const dbPassword = await generatePassword();
@@ -219,6 +226,7 @@ export async function tryCreateStarterProject(workingDirectory, onError) {
 
     writeFileOrError(`${workingDirectory}/src/css/root.module.css`, css, onError);
     writeFileOrError(`${workingDirectory}/src/components/ApartmentForm.tsx`, apartmentForm, onError);
+    writeFileOrError(`${workingDirectory}/src/components/RichTextEditor.tsx`, richTextEditor, onError);
     writeFileOrError(`${workingDirectory}/src/components/LandForm.tsx`, landForm, onError);
     writeFileOrError(`${workingDirectory}/src/components/StudioForm.tsx`, studioForm, onError);
     writeFileOrError(`${workingDirectory}/src/components/HouseForm.tsx`, houseForm, onError);

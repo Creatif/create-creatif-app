@@ -5,6 +5,8 @@ import { ApartmentForm } from './components/ApartmentForm';
 import css from './css/root.module.css';
 import { StudioForm } from './components/StudioForm';
 import { LandForm } from './components/LandForm';
+import { RichTextEditor } from './components/RichTextEditor';
+import type { Delta } from 'quill/core';
 
 export function PropertyForm() {
     return (
@@ -34,6 +36,8 @@ export function PropertyForm() {
 
             landSize: number | null;
             hasConstructionPermit: number | null;
+            
+            finalNote: Delta | null;
         }>
             bindings={{
                 name: (values) => \`\${values.address}-\${values.city}-\${values.postalCode}\`,
@@ -65,6 +69,8 @@ export function PropertyForm() {
 
                     hasConstructionPermit: null,
                     landSize: null,
+                    
+                    finalNote: null,
                 },
             }}
             inputs={(submitButton, { watch, inputReference }) => {
@@ -144,11 +150,7 @@ export function PropertyForm() {
                         </div>
 
                         <div className={css.accountNote}>
-                            <InputTextarea
-                                label="Account note"
-                                name="finalNote"
-                                description="Describe anything that could not be represented in the fields above"
-                            />
+                            <RichTextEditor name="finalNote" />
                         </div>
 
                         <div className={css.submitButton}>{submitButton}</div>
@@ -356,7 +358,7 @@ export function StudioForm() {
         </div>
     );
 }
-`
+`;
 
 export const landForm = `
 import { InputCheckbox, InputNumberControlled } from 'creatif-ui-sdk';
@@ -385,7 +387,77 @@ export function LandForm() {
         </div>
     );
 }
-`
+`;
+
+export const richTextEditor = `
+import {useEffect, useRef, useTransition} from 'react';
+import Quill from 'quill';
+import type {QuillOptions} from 'quill';
+import 'quill/dist/quill.core.css';
+import 'quill/dist/quill.snow.css';
+import type { Delta } from 'quill/core';
+import {useCreatifFormContext, useCreatifController} from "creatif-ui-sdk";
+
+interface Props {
+    name: string;
+    placeholder?: string;
+}
+
+export function RichTextEditor({name, placeholder}: Props) {
+    const {control, setValue, getValues} = useCreatifFormContext();
+    const containerRef = useRef();
+    const deltaRef = useRef<typeof Delta>(Quill.import('delta'));
+    const quillRef = useRef<Quill>(null);
+    const [_, setTransition] = useTransition();
+
+    const {
+        field,
+    } = useCreatifController({
+        name,
+        control,
+    });
+
+    useEffect(() => {
+        if (containerRef.current) {
+            const options: QuillOptions = {
+                debug: 'error',
+                modules: {
+                    toolbar: true,
+                },
+                placeholder: placeholder,
+                theme: 'snow'
+            };
+
+            const quill = new Quill(containerRef.current, options);
+            quillRef.current = quill;
+
+            const defaultValue = getValues(name);
+            if (defaultValue) {
+                const delta = new deltaRef.current(defaultValue);
+                quillRef.current.setContents(delta);
+                setValue(name, delta);
+            }
+
+            quill.on('text-change', (delta) => {
+                setTransition(() => {
+                    field.onChange(delta);
+                    setValue(name, quillRef.current.getContents());
+                });
+            });
+        }
+    }, []);
+
+    return <div>
+        <label style={{
+            display: 'block',
+            fontSize: '0.9rem',
+            fontWeight: 500,
+            marginBottom: '0.5rem',
+        }}>Account note</label>
+        <div ref={containerRef} />
+    </div>;
+}
+`;
 
 export const accountForm = `
 import { Form, InputText } from 'creatif-ui-sdk';

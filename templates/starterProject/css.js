@@ -9,6 +9,10 @@ export const css = `
     margin-top: 1rem;
 }
 
+.spacing {
+    margin: 0.5rem 0 0.5rem 0;
+}
+
 .houseDetailsHeader {
     margin: 2rem 0 1rem 0;
     padding-bottom: 0.5rem;

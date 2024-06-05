@@ -12,7 +12,7 @@ export default function App() {
                 projectName: 'project',
                 items: [
                     {
-                        structureType: 'map',
+                        structureType: 'list',
                         structureName: 'Properties',
                         form: <PropertyForm />,
                     },
@@ -27,4 +27,4 @@ export default function App() {
     );
 }
 
-`
+`;

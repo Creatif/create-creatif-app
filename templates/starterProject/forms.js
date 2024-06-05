@@ -73,20 +73,26 @@ export function PropertyForm() {
                     finalNote: null,
                 },
             }}
-            inputs={(submitButton, { watch, inputReference }) => {
+            inputs={(submitButton, { watch, inputReference, inputLocale }) => {
                 const propertyType = watch('propertyType');
 
                 return (
                     <>
-                        {inputReference({
-                            structureName: 'Accounts',
-                            name: 'accounts',
-                            structureType: 'map',
-                            label: 'Account',
-                            validation: {
-                                required: 'Selecting an owner is required',
-                            },
-                        })}
+                        <div>
+                            {inputReference({
+                                structureName: 'Accounts',
+                                name: 'accounts',
+                                structureType: 'map',
+                                label: 'Account',
+                                validation: {
+                                    required: 'Selecting an owner is required',
+                                },
+                            })}
+                        </div>
+
+                        <div className={css.spacing}>
+                            {inputLocale()}
+                        </div>
 
                         <div>
                             <div className={css.fieldGrid}>

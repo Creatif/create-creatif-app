@@ -4,7 +4,6 @@
   "description": "CLI to create Creatif CMS app",
   "main": "bin.js",
   "bin": "bin.js",
-  "type": "module",
   "scripts": {
     "build": "rollup main.js --file bin.js --format cjs",
     "npm-publish": "npm run build && npm publish"

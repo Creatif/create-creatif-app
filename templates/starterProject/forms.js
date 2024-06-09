@@ -155,9 +155,7 @@ export function PropertyForm() {
                             {propertyType === 'Land' && <LandForm />}
                         </div>
 
-                        <div className={css.accountNote} style={{
-                                height: '120px',
-                            }}>
+                        <div className={css.accountNote}>
                             <RichTextEditor name="finalNote" />
                         </div>
 
@@ -462,7 +460,9 @@ export function RichTextEditor({name, placeholder}: Props) {
             fontWeight: 500,
             marginBottom: '0.5rem',
         }}>Account note</label>
-        <div ref={containerRef} />
+        <div ref={containerRef} style={{
+            height: '120px',
+        }} />
     </div>;
 }
 `;

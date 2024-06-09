@@ -156,7 +156,9 @@ export function PropertyForm() {
                         </div>
 
                         <div className={css.accountNote}>
-                            <RichTextEditor name="finalNote" />
+                            <RichTextEditor name="finalNote" style={{
+                                height: '120px',
+                            }} />
                         </div>
 
                         <div className={css.submitButton}>{submitButton}</div>

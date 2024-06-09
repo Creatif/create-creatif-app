@@ -155,10 +155,10 @@ export function PropertyForm() {
                             {propertyType === 'Land' && <LandForm />}
                         </div>
 
-                        <div className={css.accountNote}>
-                            <RichTextEditor name="finalNote" style={{
+                        <div className={css.accountNote} style={{
                                 height: '120px',
-                            }} />
+                            }}>
+                            <RichTextEditor name="finalNote" />
                         </div>
 
                         <div className={css.submitButton}>{submitButton}</div>

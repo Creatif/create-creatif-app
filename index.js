@@ -33,13 +33,7 @@
 
 import shell from 'shelljs';
 import { errorWrap, onError } from './util.js';
-import {
-    tryCreateStarterProject,
-    tryMoveExtractedFiles,
-    tryPrepareProject,
-    tryUnzipBackend,
-    tryWriteBackendZip
-} from './stages.js';
+import { tryCreateStarterProject, tryPrepareProject, tryCreateBackend } from './stages.js';
 
 /** @type {import('./types/index.js').create} */
 export async function create(options) {
@@ -70,8 +64,6 @@ export async function create(options) {
  * @returns {Promise<void>}
  */
 async function runStages(workingDirectory, projectName, onError) {
-    await tryWriteBackendZip(onError);
-    await tryUnzipBackend(`${workingDirectory}/backend/backend.zip`, onError);
-    await tryMoveExtractedFiles(workingDirectory, onError);
+    await tryCreateBackend(workingDirectory, onError);
     await tryPrepareProject(workingDirectory, projectName, onError);
 }

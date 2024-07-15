@@ -17,10 +17,10 @@ import {
     frontendEnv,
     frontendGitignore,
     indexHtml,
-    indexTsx,
+    indexTsx, multipleUploadsWorker,
     packageJson,
     prettier,
-    prettierIgnore,
+    prettierIgnore, singleWorker,
     viteConfig,
 } from './templates/templates.js';
 import { css } from './templates/starterProject/css.js';
@@ -225,6 +225,8 @@ export async function tryCreateStarterProject(workingDirectory, onError) {
     writeDirOrError(`${workingDirectory}/src/css`, onError);
 
     writeFileOrError(`${workingDirectory}/src/css/root.module.css`, css, onError);
+    writeFileOrError(`${workingDirectory}/singleUploadWorker.js`, singleWorker, onError);
+    writeFileOrError(`${workingDirectory}/multipleUploadsWorker.js`, multipleUploadsWorker, onError);
     writeFileOrError(`${workingDirectory}/src/components/ApartmentForm.tsx`, apartmentForm, onError);
     writeFileOrError(`${workingDirectory}/src/components/RichTextEditor.tsx`, richTextEditor, onError);
     writeFileOrError(`${workingDirectory}/src/components/LandForm.tsx`, landForm, onError);

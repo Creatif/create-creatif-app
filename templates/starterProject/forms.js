@@ -1,5 +1,5 @@
 export const propertyForm = `
-import { Form, InputText, InputSelectControlled, InputTextarea } from 'creatif-ui-sdk';
+import { Form, InputText, InputSelectControlled, InputTextarea, Grid, Cell, File } from 'creatif-ui-sdk';
 import { HouseForm } from './components/HouseForm';
 import { ApartmentForm } from './components/ApartmentForm';
 import css from './css/root.module.css';
@@ -36,8 +36,6 @@ export function PropertyForm() {
 
             landSize: number | null;
             hasConstructionPermit: number | null;
-            
-            finalNote: Delta | null;
         }>
             bindings={{
                 name: (values) => \`\${values.address}-\${values.city}-\${values.postalCode}\`,
@@ -69,108 +67,128 @@ export function PropertyForm() {
 
                     hasConstructionPermit: null,
                     landSize: null,
-                    
-                    finalNote: null,
                 },
             }}
-            inputs={(submitButton, { watch, inputConnection, inputLocale }) => {
+            inputs={(submitButton, { watch, inputConnection, inputLocale, inputGroups, inputFile }) => {
                 const propertyType = watch('propertyType');
 
                 return (
-                    <>
-                        <div>
+                    <Grid>
+                        <Cell span="span 12">
                             {inputConnection({
                                 structureName: 'Accounts',
                                 name: 'accounts',
                                 structureType: 'map',
                                 label: 'Account',
-                                validation: {
+                                options: {
                                     required: 'Selecting an owner is required',
                                 },
                             })}
-                        </div>
+                        </Cell>
 
-                        <div className={css.spacing}>
+                        <Cell span="span 12">
                             {inputLocale()}
-                        </div>
+                        </Cell>
 
-                        <div>
-                            <div className={css.fieldGrid}>
-                                <div>
-                                    <InputText
-                                        label="Address"
-                                        name="address"
-                                        options={{
-                                            required: 'Address is required',
-                                        }}
-                                    />
-                                </div>
+                        <Cell span="span 12">
+                            {inputGroups()}
+                        </Cell>
 
-                                <div>
-                                    <InputText
-                                        label="City"
-                                        name="city"
-                                        options={{
-                                            required: 'City is required',
-                                        }}
-                                    />
-                                </div>
+                        <Cell span="span 4">
+                            <InputText
+                                label="Address"
+                                name="address"
+                                options={{
+                                    required: 'Address is required',
+                                }}
+                            />
+                        </Cell>
 
-                                <div>
-                                    <InputText
-                                        label="Postal code"
-                                        name="postalCode"
-                                        options={{
-                                            required: 'Postal code is required',
-                                        }}
-                                    />
-                                </div>
+                        <Cell span="span 4">
+                            <InputText
+                                label="City"
+                                name="city"
+                                options={{
+                                    required: 'City is required',
+                                }}
+                            />
+                        </Cell>
 
-                                <div>
-                                    <InputSelectControlled
-                                        data={['Rent', 'Sell', 'Rent business']}
-                                        label="Property status"
-                                        name="propertyStatus"
-                                        validation={{
-                                            required: 'Property status is required',
-                                        }}
-                                    />
-                                </div>
+                        <Cell span="span 4">
+                            <InputText
+                                label="Postal code"
+                                name="postalCode"
+                                options={{
+                                    required: 'Postal code is required',
+                                }}
+                            />
+                        </Cell>
 
-                                <div>
-                                    <InputSelectControlled
-                                        data={['House', 'Apartment', 'Studio', 'Land']}
-                                        label="Property type"
-                                        name="propertyType"
-                                        validation={{
-                                            required: 'Property type is required',
-                                        }}
-                                    />
-                                </div>
-                            </div>
+                        <Cell span="span 6">
+                            <InputSelectControlled
+                                data={['Rent', 'Sell', 'Rent business']}
+                                label="Property status"
+                                name="propertyStatus"
+                                options={{
+                                    required: 'Property status is required',
+                                }}
+                            />
+                        </Cell>
 
+                        <Cell span="span 6">
+                            <InputSelectControlled
+                                data={['House', 'Apartment', 'Studio', 'Land']}
+                                label="Property type"
+                                name="propertyType"
+                                options={{
+                                    required: 'Property type is required',
+                                }}
+                            />
+                        </Cell>
+
+                        <Cell span="span 12">
                             {propertyType === 'Apartment' && <ApartmentForm />}
+                        </Cell>
+
+                        <Cell span="span 12">
                             {propertyType === 'House' && <HouseForm />}
+                        </Cell>
+
+                        <Cell span="span 12">
                             {propertyType === 'Studio' && <StudioForm />}
+                        </Cell>
+
+                        <Cell span="span 12">
                             {propertyType === 'Land' && <LandForm />}
-                        </div>
+                        </Cell>
 
-                        <div className={css.accountNote}>
-                            <RichTextEditor name="finalNote" />
-                        </div>
+                        <Cell span="span 12">
+                            <File inputFile={inputFile} name="propertyImages" label="Property images" description="You can upload as much images as you want" fileButtonProps={{
+                                multiple: true,
+                                accept: "image/jpg,image/jpeg,image/png,image/webp,image/avif"
+                            }} />
+                        </Cell>
 
-                        <div className={css.submitButton}>{submitButton}</div>
-                    </>
+                        <Cell span="span 12">
+                            <InputTextarea
+                                label="Account note"
+                                name="finalNote"
+                                description="Describe anything that could not be represented in the fields above"
+                            />
+                        </Cell>
+
+                        <Cell span="span 12">{submitButton}</Cell>
+                    </Grid>
                 );
             }}
         />
     );
 }
+
 `;
 
 export const apartmentForm = `
-import { InputCheckbox, InputNumberControlled } from 'creatif-ui-sdk';
-import { useCreatifFormContext } from 'creatif-ui-sdk';
+import { InputText, Grid, Cell, useCreatifFormContext } from 'creatif-ui-sdk';
 import css from '../css/root.module.css';
 
 export function ApartmentForm() {
@@ -178,65 +196,61 @@ export function ApartmentForm() {
     const apartmentBalcony = watch('apartmentBalcony');
 
     return (
-        <div>
-            <h1 className={css.houseDetailsHeader}>APARTMENT DETAILS</h1>
+        <Grid cls={[css.spacing]}>
+            <Cell span="span 12" cls={[css.houseDetailsHeader]}>APARTMENT DETAILS</Cell>
 
-            <div className={css.fieldGrid}>
-                <div>
-                    <InputNumberControlled
-                        name="apartmentFloorNumber"
-                        label="Floor number"
-                        validation={{
-                            required: 'Floor number is required',
-                        }}
-                    />
-                </div>
+            <Cell span="span 4">
+                <InputNumberControlled
+                    name="apartmentFloorNumber"
+                    label="Floor number"
+                    options={{
+                        required: 'Floor number is required',
+                    }}
+                />
+            </Cell>
 
-                <div>
-                    <InputNumberControlled
-                        name="apartmentSize"
-                        label="Size (in meters squared)"
-                        validation={{
-                            required: 'Size is required',
-                        }}
-                    />
-                </div>
+            <Cell span="span 4">
+                <InputNumberControlled
+                    name="apartmentSize"
+                    label="Size (in meters squared)"
+                    options={{
+                        required: 'Size is required',
+                    }}
+                />
+            </Cell>
 
-                <div>
-                    <InputNumberControlled
-                        name="apartmentLocalPrice"
-                        label="Local price (in meters squared)"
-                        validation={{
-                            required: 'Local price is required',
-                        }}
-                    />
-                </div>
+            <Cell span="span 4">
+                <InputNumberControlled
+                    name="apartmentLocalPrice"
+                    label="Local price (in meters squared)"
+                    options={{
+                        required: 'Local price is required',
+                    }}
+                />
+            </Cell>
 
-                <div>
-                    <InputCheckbox name="apartmentBalcony" label="Has balcony?" />
-                </div>
-            </div>
+            <Cell span="span 12">
+                <InputCheckbox name="apartmentBalcony" label="Has balcony?" />
+            </Cell>
 
-            <div className={css.fieldGrid}>
-                {apartmentBalcony && (
-                    <div>
-                        <InputNumberControlled
-                            name="apartmentBalconySize"
-                            label="Balcony size"
-                            validation={{
-                                required: 'Balcony size is required',
-                            }}
-                        />
-                    </div>
-                )}
-            </div>
-        </div>
+            {apartmentBalcony && <Cell span="span 12">
+                <InputNumberControlled
+                    name="apartmentBalconySize"
+                    label="Balcony size"
+                    options={{
+                        required: 'Balcony size is required',
+                    }}
+                />
+            </Cell>}
+        </Grid>
     );
 }
+
+
 `;
 
 export const houseForm = `
-import { InputCheckbox, InputNumberControlled, InputTextarea } from 'creatif-ui-sdk';
+import { InputCheckbox, InputNumberControlled, InputTextarea, Grid, Cell } from 'creatif-ui-sdk';
 import { useCreatifFormContext } from 'creatif-ui-sdk';
 import css from '../css/root.module.css';
 
@@ -247,10 +261,10 @@ export function HouseForm() {
     const needsRepair = watch('houseNeedsRepair');
 
     return (
-        <div>
-            <h1 className={css.houseDetailsHeader}>HOUSE DETAILS</h1>
+        <Grid cls={[css.spacing]}>
+            <Cell span="span 12" cls={[css.houseDetailsHeader]}>HOUSE DETAILS</Cell>
 
-            <div className={css.fieldGrid}>
+            <Cell span="span 4">
                 <div>
                     <InputNumberControlled
                         name="numOfHouseFloors"
@@ -260,139 +274,129 @@ export function HouseForm() {
                         }}
                     />
                 </div>
+            </Cell>
 
-                <div>
-                    <InputNumberControlled
-                        name="houseSize"
-                        label="Size"
-                        description="In meters squared"
-                        validation={{
-                            required: 'Size is required',
-                        }}
+            <Cell span="span 4">
+                <InputNumberControlled
+                    name="houseSize"
+                    label="Size"
+                    description="In meters squared"
+                    validation={{
+                        required: 'Size is required',
+                    }}
+                />
+            </Cell>
+
+            <Cell span="span 4">
+                <InputNumberControlled
+                    name="houseLocalPrice"
+                    label="Local price"
+                    description="Per meters squared"
+                    validation={{
+                        required: 'Local price is required',
+                    }}
+                />
+            </Cell>
+
+            <Cell span="span 12">
+                <InputCheckbox name="houseBackYard" label="Has back yard?" />
+            </Cell>
+
+            {backYard && <Cell span="span 12">
+                <InputNumberControlled
+                    name="houseBackYardSize"
+                    label="Back yard size"
+                    description="Size in meters squared"
+                    validation={{
+                        required: 'Back yard size is required',
+                    }}
+                />
+            </Cell>}
+
+            <Cell span="span 12">
+                <InputCheckbox name="houseNeedsRepair" label="Need repair?" />
+            </Cell>
+
+            {needsRepair && <Cell span="span 12">
+                <InputTextarea
+                    description="The description should be as detailed as possible"
+                    resize="both"
+                    autosize={true}
+                    minRows={2}
+                    maxRows={10}
+                    name="houseRepairNote"
+                    label="Describe the repairs"
+                    options={{
+                        required: 'Note is required',
+                    }}
                     />
-                </div>
-
-                <div>
-                    <InputNumberControlled
-                        name="houseLocalPrice"
-                        label="Local price"
-                        description="Per meters squared"
-                        validation={{
-                            required: 'Local price is required',
-                        }}
-                    />
-                </div>
-
-                <div>
-                    <InputCheckbox name="houseBackYard" label="Has back yard?" />
-                </div>
-
-                <div>
-                    <InputCheckbox name="houseNeedsRepair" label="Need repair?" />
-                </div>
-            </div>
-
-            <div className={css.fieldGrid}>
-                {backYard && (
-                    <div>
-                        <InputNumberControlled
-                            name="houseBackYardSize"
-                            label="Back yard size"
-                            description="Size in meters squared"
-                            validation={{
-                                required: 'Back yard size is required',
-                            }}
-                        />
-                    </div>
-                )}
-
-                {needsRepair && (
-                    <div
-                        style={{
-                            gridColumn: 'span 2',
-                        }}>
-                        <InputTextarea
-                            description="The description should be as detailed as possible"
-                            resize="both"
-                            autosize={true}
-                            minRows={2}
-                            maxRows={10}
-                            name="houseRepairNote"
-                            label="Describe the repairs"
-                            options={{
-                                required: 'Note is required',
-                            }}
-                        />
-                    </div>
-                )}
-            </div>
-        </div>
+            </Cell>}
+        </Grid>
     );
 }
+
 `;
 
 export const studioForm = `
-import { InputNumberControlled } from 'creatif-ui-sdk';
+import { InputNumberControlled, Grid, Cell } from 'creatif-ui-sdk';
 import css from '../css/root.module.css';
 
 export function StudioForm() {
     return (
-        <div>
-            <h1 className={css.houseDetailsHeader}>STUDIO DETAILS</h1>
+        <Grid cls={[css.spacing]}>
+            <Cell span="span 12" cls={[css.houseDetailsHeader]}>STUDIO DETAILS</Cell>
 
-            <div className={css.fieldGrid}>
-                <div>
-                    <InputNumberControlled
-                        name="studioFloorNumber"
-                        label="Floor number"
-                        validation={{
-                            required: 'Floor number is required',
-                        }}
-                    />
-                </div>
+            <Cell span="span 6">
+                <InputNumberControlled
+                    name="studioFloorNumber"
+                    label="Floor number"
+                    validation={{
+                        required: 'Floor number is required',
+                    }}
+                />
+            </Cell>
 
-                <div>
-                    <InputNumberControlled
-                        name="studioSize"
-                        label="Size (in meters squared)"
-                        validation={{
-                            required: 'Size is required',
-                        }}
-                    />
-                </div>
-            </div>
-        </div>
+            <Cell span="span 6">
+                <InputNumberControlled
+                    name="studioSize"
+                    label="Size (in meters squared)"
+                    validation={{
+                        required: 'Size is required',
+                    }}
+                />
+            </Cell>
+        </Grid>
     );
 }
+
 `;
 
 export const landForm = `
-import { InputCheckbox, InputNumberControlled } from 'creatif-ui-sdk';
+import { InputCheckbox, InputNumberControlled, Grid, Cell } from 'creatif-ui-sdk';
 import css from '../css/root.module.css';
 
 export function LandForm() {
     return (
-        <div>
-            <h1 className={css.houseDetailsHeader}>APARTMENT DETAILS</h1>
+        <Grid cls={[css.spacing]}>
+            <Cell cls={[css.houseDetailsHeader]}>APARTMENT DETAILS</Cell>
 
-            <div className={css.fieldGrid}>
-                <div>
-                    <InputNumberControlled
-                        name="landSize"
-                        label="Size (in meters squared)"
-                        validation={{
-                            required: 'Size is required',
-                        }}
-                    />
-                </div>
+            <Cell span="span 12">
+                <InputNumberControlled
+                    name="landSize"
+                    label="Size (in meters squared)"
+                    validation={{
+                        required: 'Size is required',
+                    }}
+                />
+            </Cell>
 
-                <div>
-                    <InputCheckbox name="hasConstructionPermit" label="Has construction Permit?" />
-                </div>
-            </div>
-        </div>
+            <Cell span="span 12">
+                <InputCheckbox name="hasConstructionPermit" label="Has construction Permit?" />
+            </Cell>
+        </Grid>
     );
 }
+
 `;
 
 export const richTextEditor = `
@@ -468,8 +472,9 @@ export function RichTextEditor({name, placeholder}: Props) {
 `;
 
 export const accountForm = `
-import { Form, InputText } from 'creatif-ui-sdk';
+import { Form, InputText, Grid, Cell, File } from 'creatif-ui-sdk';
 import css from './css/root.module.css';
+
 export function AccountForm() {
     return (
         <Form<{
@@ -491,10 +496,10 @@ export function AccountForm() {
                     postalCode: '',
                 },
             }}
-            inputs={(submitButton) => (
+            inputs={(submitButton, {inputFile}) => (
                 <>
-                    <div className={css.fieldGrid}>
-                        <div>
+                    <Grid>
+                        <Cell span="span 12">
                             <InputText
                                 label="Name"
                                 name="name"
@@ -502,9 +507,9 @@ export function AccountForm() {
                                     required: 'Name is required',
                                 }}
                             />
-                        </div>
+                        </Cell>
 
-                        <div>
+                        <Cell span="span 12">
                             <InputText
                                 label="Last name"
                                 name="lastName"
@@ -512,9 +517,9 @@ export function AccountForm() {
                                     required: 'Last name is required',
                                 }}
                             />
-                        </div>
+                        </Cell>
 
-                        <div>
+                        <Cell span="span 3">
                             <InputText
                                 label="Address"
                                 name="address"
@@ -522,9 +527,9 @@ export function AccountForm() {
                                     required: 'Address is required',
                                 }}
                             />
-                        </div>
+                        </Cell>
 
-                        <div>
+                        <Cell span="span 3">
                             <InputText
                                 label="City"
                                 name="city"
@@ -532,9 +537,9 @@ export function AccountForm() {
                                     required: 'City is required',
                                 }}
                             />
-                        </div>
+                        </Cell>
 
-                        <div>
+                        <Cell span="span 3">
                             <InputText
                                 label="Postal code"
                                 name="postalCode"
@@ -542,8 +547,14 @@ export function AccountForm() {
                                     required: 'City is required',
                                 }}
                             />
-                        </div>
-                    </div>
+                        </Cell>
+
+                        <Cell span="span 12">
+                            <File label="Profile image" inputFile={inputFile} name="profileImage" fileButtonProps={{
+                                accept: 'image/png,image/jpeg,image/jpg,image/gif,image/webp,image/avif'
+                            }} />
+                        </Cell>
+                    </Grid>
 
                     <div className={css.submitButton}>{submitButton}</div>
                 </>
@@ -551,4 +562,5 @@ export function AccountForm() {
         />
     );
 }
+
 `;

@@ -10,11 +10,11 @@ export const css = `
 }
 
 .spacing {
-    margin: 0.5rem 0 0.5rem 0;
+    margin: 1rem 0 1rem 0;
 }
 
 .houseDetailsHeader {
-    margin: 2rem 0 1rem 0;
+    margin: 0 0 1rem 0;
     padding-bottom: 0.5rem;
     font-size: 1rem;
 
@@ -35,4 +35,5 @@ export const css = `
 
     margin-top: 3rem;
 }
+
 `;

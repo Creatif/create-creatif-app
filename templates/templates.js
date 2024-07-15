@@ -100,6 +100,7 @@ services:
 export const frontendDockerIgnore = `
 node_modules
 build
+backend/.git
 `;
 
 export const frontendDockerfile = `
@@ -110,8 +111,7 @@ WORKDIR /app
 COPY package*.json ./
 
 RUN npm install
-RUN npm install creatif-ui-sdk --save
-RUN npm install quill@2.0.2
+RUN npm install creatif-ui-sdk quill@2.0.2 --save
 
 COPY . .
 

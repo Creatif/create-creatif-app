@@ -5,7 +5,6 @@ import kleur from 'kleur';
 import fs from 'fs';
 import { errorWrap, generatePassword, writeDirOrError, writeFileOrError } from './util.js';
 import shell from 'shelljs';
-import { readdirSync } from 'fs';
 import {
     backendDockerfile,
     backendEnv,
@@ -18,10 +17,12 @@ import {
     frontendEnv,
     frontendGitignore,
     indexHtml,
-    indexTsx, multipleUploadsWorker,
+    indexTsx,
+    multipleUploadsWorker,
     packageJson,
     prettier,
-    prettierIgnore, singleWorker,
+    prettierIgnore,
+    singleWorker,
     viteConfig,
 } from './templates/templates.js';
 import { css } from './templates/starterProject/css.js';

@@ -4,7 +4,7 @@ APP_ENV=local
 VITE_FRONTEND_HOST=http://localhost:5173
 VITE_API_HOST=http://localhost:3002
 
-DATABASE_PASSWORD="{db_password}"
+DATABASE_PASSWORD='{db_password}'
 DATABASE_NAME=app
 DATABASE_PORT=5432
 DATABASE_HOST=db
@@ -15,7 +15,7 @@ SERVER_PORT=3002
 `;
 
 export const backendEnv = `
-DATABASE_PASSWORD={db_password}
+DATABASE_PASSWORD='{db_password}'
 DATABASE_NAME=app
 DATABASE_PORT=5432
 DATABASE_HOST=db
@@ -70,10 +70,21 @@ services:
       - ./backend:/var/log:/app/var/log
       - ./backend:/var/assets:/app/var/assets
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -i http://api:3002/api/v1/health/full-health || { echo 'Health check failed with code $?'; exit 1; }" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
   db:
-    image: "postgres"
+    image: "postgres:17-alpine"
     container_name: "db"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U app" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     ports:
       - "54333:5432"
     restart: always
@@ -94,7 +105,11 @@ services:
       - 5173:5173
     expose:
       - 5173
-
+    depends_on:
+      db: 
+        condition: service_healthy
+      api:
+        condition: service_started
 `;
 
 export const frontendDockerIgnore = `
@@ -110,8 +125,8 @@ WORKDIR /app
 
 COPY package*.json ./
 
-RUN npm install
-RUN npm install creatif-ui-sdk quill@2.0.2 --save
+RUN npm install --force --verbose
+RUN npm install creatif-ui-sdk quill@2.0.2 --save --force --verbose
 
 COPY . .
 
@@ -304,32 +319,32 @@ export const packageJson = `
       "dev": "vite --host 0.0.0.0 --mode development"
   },
   "devDependencies": {
-        "@babel/preset-env": "^7.22.7",
-        "@babel/preset-react": "^7.22.5",
-        "@babel/preset-typescript": "^7.22.5",
-        "@rollup/plugin-commonjs": "^25.0.7",
-        "@types/node": "^20.5.7",
-        "@types/react": "^18.2.14",
-        "@types/react-dom": "^18.2.6",
-        "@typescript-eslint/eslint-plugin": "^6.0.0",
-        "@typescript-eslint/parser": "^6.0.0",
-        "@vitejs/plugin-react": "^4.2.1",
-        "eslint": "^8.44.0",
-        "eslint-config-prettier": "^8.8.0",
-        "eslint-plugin-import": "^2.27.5",
-        "eslint-plugin-react": "^7.32.2",
-        "postcss": "^8.4.31",
-        "postcss-preset-mantine": "^1.11.0",
-        "postcss-simple-vars": "^7.0.1",
-        "prettier": "^3.0.0",
-        "rollup": "^4.10.0",
-        "rollup-plugin-cleanup": "^3.2.1",
-        "rollup-plugin-typescript2": "^0.36.0",
-        "ts-node": "^10.9.1",
-        "typescript": "^5.1.6",
-        "vite": "^5.1.1",
-        "vite-plugin-dts": "^3.6.4",
-        "vite-plugin-css-injected-by-js": "^3.5.1"
+        "@babel/preset-env": "7.22.7",
+        "@babel/preset-react": "7.22.5",
+        "@babel/preset-typescript": "7.22.5",
+        "@rollup/plugin-commonjs": "25.0.7",
+        "@types/node": "20.5.7",
+        "@types/react": "18.2.14",
+        "@types/react-dom": "18.2.6",
+        "@typescript-eslint/eslint-plugin": "6.0.0",
+        "@typescript-eslint/parser": "6.0.0",
+        "@vitejs/plugin-react": "4.2.1",
+        "eslint": "8.44.0",
+        "eslint-config-prettier": "8.8.0",
+        "eslint-plugin-import": "2.27.5",
+        "eslint-plugin-react": "7.32.2",
+        "postcss": "8.4.31",
+        "postcss-preset-mantine": "1.11.0",
+        "postcss-simple-vars": "7.0.1",
+        "prettier": "3.0.0",
+        "rollup": "4.10.0",
+        "rollup-plugin-cleanup": "3.2.1",
+        "rollup-plugin-typescript2": "0.36.0",
+        "ts-node": "10.9.1",
+        "typescript": "5.1.6",
+        "vite": "5.1.1",
+        "vite-plugin-dts": "3.6.4",
+        "vite-plugin-css-injected-by-js": "3.5.1"
     },
     "dependencies": {
         "react": "^18.2.0",
@@ -658,4 +673,4 @@ function toFileReaderPromise(blob) {
     });
 }
 
-`
+`;

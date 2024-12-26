@@ -7,7 +7,7 @@ VITE_API_HOST=http://localhost:3002
 DATABASE_PASSWORD='{db_password}'
 DATABASE_NAME=app
 DATABASE_PORT=5432
-DATABASE_HOST=db
+DATABASE_HOST=creatif_db
 DATABASE_USER=app
 
 SERVER_HOST=localhost
@@ -18,7 +18,7 @@ export const backendEnv = `
 DATABASE_PASSWORD='{db_password}'
 DATABASE_NAME=app
 DATABASE_PORT=5432
-DATABASE_HOST=db
+DATABASE_HOST=creatif_db
 DATABASE_USER=app
 
 SERVER_HOST=localhost
@@ -52,8 +52,8 @@ CMD ["air", "-c", "/app/cmd/http/.air.toml"]
 
 export const frontendDockerCompose = `
 services:
-  api:
-    container_name: "api"
+  creatif_api:
+    container_name: "creatif_api"
     build:
       context: backend
       dockerfile: Dockerfile
@@ -70,16 +70,16 @@ services:
       - ./backend:/var/log:/app/var/log
       - ./backend:/var/assets:/app/var/assets
     depends_on:
-      db:
+      creatif_db:
         condition: service_healthy
     healthcheck:
       test: [ "CMD-SHELL", "curl -i http://api:3002/api/v1/health/full-health || { echo 'Health check failed with code $?'; exit 1; }" ]
       interval: 5s
       timeout: 5s
       retries: 10
-  db:
+  creatif_db:
     image: "postgres:17-alpine"
-    container_name: "db"
+    container_name: "creatif_db"
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U app" ]
       interval: 5s
@@ -91,8 +91,8 @@ services:
     environment:
       POSTGRES_PASSWORD: \${DATABASE_PASSWORD}
       POSTGRES_USER: \${DATABASE_USER}
-  frontend:
-    container_name: "frontend"
+  creatif_frontend:
+    container_name: "creatif_frontend"
     build:
       context: .
       dockerfile: Dockerfile
@@ -106,9 +106,9 @@ services:
     expose:
       - 5173
     depends_on:
-      db: 
+      creatif_db: 
         condition: service_healthy
-      api:
+      creatif_api:
         condition: service_started
 `;
 
